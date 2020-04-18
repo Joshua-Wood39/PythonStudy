@@ -8,11 +8,17 @@ import constants
 
 def draw_game():
     global SURFACE_MAIN
-    # TODO clear the surface
+
+    # clear the surface
+    SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
 
     # TODO draw the map
 
-    # TODO draw the character
+    # draw the character
+    SURFACE_MAIN.blit(constants.S_PLAYER, (200, 200))
+
+    # update the display
+    pygame.display.flip()
 
 
 def game_main_loop():
@@ -29,7 +35,8 @@ def game_main_loop():
             if event.type == pygame.QUIT:
                 game_quit = True
 
-        # TODO draw the game
+        # draw the game
+        draw_game()
 
     pygame.quit()
     exit()

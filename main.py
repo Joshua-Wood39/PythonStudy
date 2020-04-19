@@ -6,13 +6,35 @@ import tcod as libtcodpy
 import constants
 
 
+# STRUCT
+
+class struc_Tile:
+    def __init__(self, block_path):
+        self.block_path = block_path
+
+
+# MAP
+
+def map_create():
+    new_map = [[struc_Tile(False) for y in range(0, constants.MAP_HEIGHT)]
+               for x in range(0, constants.MAP_WIDTH)]
+
+    new_map[10][10].block_path = True
+    new_map[10][15].block_path = True
+
+    return new_map
+
+
+# DRAWING
+
 def draw_game():
     global SURFACE_MAIN
 
     # clear the surface
     SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
 
-    # TODO draw the map
+    # draw the map
+    draw_map(GAME_MAP)
 
     # draw the character
     SURFACE_MAIN.blit(constants.S_PLAYER, (200, 200))
@@ -20,6 +42,21 @@ def draw_game():
     # update the display
     pygame.display.flip()
 
+
+def draw_map(map_to_draw):
+    for x in range(0, constants.MAP_WIDTH):
+        for y in range(0, constants.MAP_HEIGHT):
+            if map_to_draw[x][y].block_path == True:
+                # draw wall
+                SURFACE_MAIN.blit(
+                    constants.S_WALL, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+            else:
+                # draw floor
+                SURFACE_MAIN.blit(
+                    constants.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+
+
+# GAME
 
 def game_main_loop():
     '''In this function we loop the main game'''
@@ -45,12 +82,14 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN
+    global SURFACE_MAIN, GAME_MAP
     # initialize pygame
     pygame.init()
 
     SURFACE_MAIN = pygame.display.set_mode(
         (constants.GAME_WIDTH, constants.GAME_HEIGHT))
+
+    GAME_MAP = map_create()
 
 
 if __name__ == '__main__':

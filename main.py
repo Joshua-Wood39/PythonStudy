@@ -16,10 +16,14 @@ class struc_Tile:
 # OBJECTS
 
 class obj_Actor:
-    def __init__(self, x, y, sprite):
+    def __init__(self, x, y, name_object, sprite, creature=None):
         self.x = x  # map addresses
         self.y = y
         self.sprite = sprite
+
+        if creature:
+            self.creature = creature
+            creature.owner = self
 
     def draw(self):
         SURFACE_MAIN.blit(
@@ -31,7 +35,23 @@ class obj_Actor:
             self.y += dy
 
 
-# MAP
+# COMPONENTS
+
+class com_Creature:
+    '''Creatures have health, can damage other objects by attacking, and can die'''
+
+    def __init__(self, name_instance, hp=10):
+        self.name_instance = name_instance
+        self.hp = hp
+
+
+# class com_Item:
+
+
+# class com_Container:
+
+    # MAP
+
 
 def map_create():
     new_map = [[struc_Tile(False) for y in range(0, constants.MAP_HEIGHT)]
@@ -55,6 +75,7 @@ def draw_game():
     draw_map(GAME_MAP)
 
     # draw the player
+    ENEMY.draw()
     PLAYER.draw()
 
     # update the display
@@ -110,7 +131,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME_MAP, PLAYER
+    global SURFACE_MAIN, GAME_MAP, PLAYER, ENEMY
     # initialize pygame
     pygame.init()
 
@@ -119,7 +140,11 @@ def game_initialize():
 
     GAME_MAP = map_create()
 
-    PLAYER = obj_Actor(0, 0, constants.S_PLAYER)
+    creature_com1 = com_Creature("greg")
+    PLAYER = obj_Actor(0, 0, "python", constants.S_PLAYER, creature_com1)
+
+    creature_com2 = com_Creature("jackie")
+    ENEMY = obj_Actor(10, 13, "crab", constants.S_ENEMY, creature_com2)
 
 
 if __name__ == '__main__':

@@ -48,7 +48,8 @@ class obj_Actor:
 
         if target:
             print(self.creature.name_instance +
-                  " attacks " + target.creature.name_instance)
+                  " attacks " + target.creature.name_instance + " for 5 damage!")
+            target.creature.take_damage(5)
 
         if not tile_is_wall:
             self.x += dx
@@ -60,10 +61,21 @@ class obj_Actor:
 class com_Creature:
     '''Creatures have health, can damage other objects by attacking, and can die'''
 
-    def __init__(self, name_instance, hp=10):
+    def __init__(self, name_instance, hp=10, death_function=None):
         self.name_instance = name_instance
         self.hp = hp
+        self.maxhp = hp
+        self.death_function = death_function
 
+    def take_damage(self, damage):
+        self.hp -= damage
+        print(self.name_instance + "'s health is " +
+              str(self.hp) + "/" + str(self.maxhp))
+
+        if self.hp <= 0:
+
+            if self.death_function is not None:
+                self.death_function(self.owner)
 
 # TODO class com_Item:
 
@@ -82,6 +94,13 @@ class ai_Test:
         self.owner.move(libtcodpy.random_get_int(0, -1, 1),
                         libtcodpy.random_get_int(0, -1, 1))
 
+
+def death_monster(monster):
+    '''On death, most monsters stop moving'''
+
+    print(monster.creature.name_instance + " is dead!")
+    monster.creature = None
+    monster.ai = None
 
 # MAP
 
@@ -180,9 +199,10 @@ def game_initialize():
     creature_com1 = com_Creature("greg")
     PLAYER = obj_Actor(1, 1, "python", constants.S_PLAYER, creature_com1)
 
-    creature_com2 = com_Creature("jackie")
+    creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com = ai_Test()
-    ENEMY = obj_Actor(10, 13, "crab", constants.S_ENEMY, creature_com2, ai_com)
+    ENEMY = obj_Actor(10, 13, "crab", constants.S_ENEMY,
+                      creature_com2, ai_com)
 
     GAME_OBJECTS = [PLAYER, ENEMY]
 

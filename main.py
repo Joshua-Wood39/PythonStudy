@@ -18,6 +18,7 @@ import constants
 class struc_Tile:
     def __init__(self, block_path):
         self.block_path = block_path
+        self.explored = False
 
 
 #  _______  ______  _________ _______  _______ _________ _______
@@ -44,8 +45,11 @@ class obj_Actor:
             ai.owner = self
 
     def draw(self):
-        SURFACE_MAIN.blit(
-            self.sprite, (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
+        is_visible = libtcodpy.map_is_in_fov(FOV_MAP, self.x, self.y)
+
+        if is_visible:
+            SURFACE_MAIN.blit(
+                self.sprite, (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
 
 #  _______  _______  _______  _______  _______  _        _______  _       _________
@@ -228,14 +232,30 @@ def draw_game():
 def draw_map(map_to_draw):
     for x in range(0, constants.MAP_WIDTH):
         for y in range(0, constants.MAP_HEIGHT):
-            if map_to_draw[x][y].block_path == True:
-                # draw wall
-                SURFACE_MAIN.blit(
-                    constants.S_WALL, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
-            else:
-                # draw floor
-                SURFACE_MAIN.blit(
-                    constants.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+
+            is_visible = libtcodpy.map_is_in_fov(FOV_MAP, x, y)
+
+            if is_visible:
+
+                map_to_draw[x][y].explored = True
+
+                if map_to_draw[x][y].block_path == True:
+                    # draw wall
+                    SURFACE_MAIN.blit(
+                        constants.S_WALL, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+                else:
+                    # draw floor
+                    SURFACE_MAIN.blit(
+                        constants.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+
+            elif map_to_draw[x][y].explored:
+
+                if map_to_draw[x][y].block_path == True:
+                    SURFACE_MAIN.blit(
+                        constants.S_WALLEXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+                else:
+                    SURFACE_MAIN.blit(
+                        constants.S_FLOOREXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
 
 
 #  _______  _______  _______  _______
@@ -246,6 +266,7 @@ def draw_map(map_to_draw):
 # | | \_  )| (   ) || |   | || (
 # | (___) || )   ( || )   ( || (____/\
 # (_______)|/     \||/     \|(_______/
+
 
 def game_main_loop():
     '''In this function we loop the main game'''
@@ -302,6 +323,7 @@ def game_initialize():
 
 
 def game_handle_keys():
+    global FOV_CALCULATE
     # get player input
     event_list = pygame.event.get()
 
@@ -313,15 +335,19 @@ def game_handle_keys():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 PLAYER.creature.move(0, -1)
+                FOV_CALCULATE = True
                 return "player-moved"
             if event.key == pygame.K_DOWN:
                 PLAYER.creature.move(0, 1)
+                FOV_CALCULATE = True
                 return "player-moved"
             if event.key == pygame.K_LEFT:
                 PLAYER.creature.move(-1, 0)
+                FOV_CALCULATE = True
                 return "player-moved"
             if event.key == pygame.K_RIGHT:
                 PLAYER.creature.move(1, 0)
+                FOV_CALCULATE = True
                 return "player-moved"
 
     return "no-action"

@@ -6,14 +6,28 @@ import tcod as libtcodpy
 import constants
 
 
-# STRUCT
+#  _______ _________ _______           _______ _________
+# (  ____ \\__   __/(  ____ )|\     /|(  ____ \\__   __/
+# | (    \/   ) (   | (    )|| )   ( || (    \/   ) (
+# | (_____    | |   | (____)|| |   | || |         | |
+# (_____  )   | |   |     __)| |   | || |         | |
+#       ) |   | |   | (\ (   | |   | || |         | |
+# /\____) |   | |   | ) \ \__| (___) || (____/\   | |
+# \_______)   )_(   |/   \__/(_______)(_______/   )_(
 
 class struc_Tile:
     def __init__(self, block_path):
         self.block_path = block_path
 
 
-# OBJECTS
+#  _______  ______  _________ _______  _______ _________ _______
+# (  ___  )(  ___ \ \__    _/(  ____ \(  ____ \\__   __/(  ____ \
+# | (   ) || (   ) )   )  (  | (    \/| (    \/   ) (   | (    \/
+# | |   | || (__/ /    |  |  | (__    | |         | |   | (_____
+# | |   | ||  __ (     |  |  |  __)   | |         | |   (_____  )
+# | |   | || (  \ \    |  |  | (      | |         | |         ) |
+# | (___) || )___) )|\_)  )  | (____/\| (____/\   | |   /\____) |
+# (_______)|/ \___/ (____/   (_______/(_______/   )_(   \_______)
 
 class obj_Actor:
     def __init__(self, x, y, name_object, sprite, creature=None, ai=None):
@@ -34,7 +48,14 @@ class obj_Actor:
             self.sprite, (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
 
-# COMPONENTS
+#  _______  _______  _______  _______  _______  _        _______  _       _________
+# (  ____ \(  ___  )(       )(  ____ )(  ___  )( (    /|(  ____ \( (    /|\__   __/
+# | (    \/| (   ) || () () || (    )|| (   ) ||  \  ( || (    \/|  \  ( |   ) (
+# | |      | |   | || || || || (____)|| |   | ||   \ | || (__    |   \ | |   | |
+# | |      | |   | || |(_)| ||  _____)| |   | || (\ \) ||  __)   | (\ \) |   | |
+# | |      | |   | || |   | || (      | |   | || | \   || (      | | \   |   | |
+# | (____/\| (___) || )   ( || )      | (___) || )  \  || (____/\| )  \  |   | |
+# (_______/(_______)|/     \||/       (_______)|/    )_)(_______/|/    )_)   )_(
 
 class com_Creature:
     '''Creatures have health, can damage other objects by attacking, and can die'''
@@ -79,10 +100,15 @@ class com_Creature:
 
 # TODO class com_Container:
 
-    # MAP
 
-
-# AI
+#  _______ _________
+# (  ___  )\__   __/
+# | (   ) |   ) (
+# | (___) |   | |
+# |  ___  |   | |
+# | (   ) |   | |
+# | )   ( |___) (___
+# |/     \|\_______/
 
 class ai_Test:
     '''Once per turn, execute'''
@@ -99,7 +125,14 @@ def death_monster(monster):
     monster.creature = None
     monster.ai = None
 
-# MAP
+#  _______  _______  _______
+# (       )(  ___  )(  ____ )
+# | () () || (   ) || (    )|
+# | || || || (___) || (____)|
+# | |(_)| ||  ___  ||  _____)
+# | |   | || (   ) || (
+# | )   ( || )   ( || )
+# |/     \||/     \||/
 
 
 def map_create():
@@ -116,6 +149,8 @@ def map_create():
     for y in range(constants.MAP_HEIGHT):
         new_map[0][y].block_path = True
         new_map[constants.MAP_WIDTH - 1][y].block_path = True
+
+    map_make_fov(new_map)
 
     return new_map
 
@@ -142,7 +177,35 @@ def map_check_for_creatures(x, y, exclude_object=None):
             if target:
                 return target
 
-# DRAWING
+
+def map_make_fov(incoming_map):
+    global FOV_MAP
+
+    FOV_MAP = libtcodpy.map_new(constants.MAP_WIDTH, constants.MAP_HEIGHT)
+
+    for y in range(constants.MAP_HEIGHT):
+        for x in range(constants.MAP_WIDTH):
+            libtcodpy.map_set_properties(FOV_MAP, x, y,
+                                         not incoming_map[x][y].block_path, not incoming_map[x][y].block_path)
+
+
+def map_calculate_fov():
+    global FOV_CALCULATE
+
+    if FOV_CALCULATE:
+        FOV_CALCULATE = False
+        libtcodpy.map_compute_fov(
+            FOV_MAP, PLAYER.x, PLAYER.y, constants.TORCH_RADIUS, constants.FOV_LIGHT_WALLS, constants.FOV_ALGO)
+
+
+#  ______   _______  _______
+# (  __  \ (  ____ )(  ___  )|\     /|
+# | (  \  )| (    )|| (   ) || )   ( |
+# | |   ) || (____)|| (___) || | _ | |
+# | |   | ||     __)|  ___  || |( )| |
+# | |   ) || (\ (   | (   ) || || || |
+# | (__/  )| ) \ \__| )   ( || () () |
+# (______/ |/   \__/|/     \|(_______)
 
 
 def draw_game():
@@ -175,7 +238,14 @@ def draw_map(map_to_draw):
                     constants.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
 
 
-# GAME
+#  _______  _______  _______  _______
+# (  ____ \(  ___  )(       )(  ____ \
+# | (    \/| (   ) || () () || (    \/
+# | |      | (___) || || || || (__
+# | | ____ |  ___  || |(_)| ||  __)
+# | | \_  )| (   ) || |   | || (
+# | (___) || )   ( || )   ( || (____/\
+# (_______)|/     \||/     \|(_______/
 
 def game_main_loop():
     '''In this function we loop the main game'''
@@ -188,6 +258,8 @@ def game_main_loop():
 
         # handle player input
         player_action = game_handle_keys()
+
+        map_calculate_fov()
 
         if player_action == "QUIT":
             game_quit = True
@@ -207,7 +279,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME_MAP, PLAYER, ENEMY, GAME_OBJECTS
+    global SURFACE_MAIN, GAME_MAP, PLAYER, ENEMY, GAME_OBJECTS, FOV_CALCULATE
     # initialize pygame
     pygame.init()
 
@@ -215,6 +287,8 @@ def game_initialize():
         (constants.MAP_WIDTH * constants.CELL_WIDTH, constants.MAP_HEIGHT * constants.CELL_HEIGHT))
 
     GAME_MAP = map_create()
+
+    FOV_CALCULATE = True
 
     creature_com1 = com_Creature("greg")
     PLAYER = obj_Actor(1, 1, "python", constants.S_PLAYER, creature_com1)

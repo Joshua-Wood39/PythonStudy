@@ -1,4 +1,5 @@
 import pygame
+import tcod as libtcodpy
 
 pygame.init()
 
@@ -25,3 +26,8 @@ S_PLAYER = pygame.image.load("assets/Python.png")
 S_ENEMY = pygame.image.load("assets/Crab.png")
 S_WALL = pygame.image.load("assets/Wall2.jpg")
 S_FLOOR = pygame.image.load("assets/Floor.jpg")
+
+# FOV Settings
+FOV_ALGO = libtcodpy.FOV_BASIC
+FOV_LIGHT_WALLS = True
+TORCH_RADIUS = 10

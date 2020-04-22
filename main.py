@@ -85,14 +85,14 @@ class com_Creature:
             self.owner.y += dy
 
     def attack(self, target, damage):
-        print(self.name_instance + " attacks " +
-              target.creature.name_instance + " for " + str(damage) + " damage!")
+        game_message(self.name_instance + " attacks " +
+                     target.creature.name_instance + " for " + str(damage) + " damage!", constants.COLOR_WHITE)
         target.creature.take_damage(damage)
 
     def take_damage(self, damage):
         self.hp -= damage
-        print(self.name_instance + "'s health is " +
-              str(self.hp) + "/" + str(self.maxhp))
+        game_message(self.name_instance + "'s health is " +
+                     str(self.hp) + "/" + str(self.maxhp), constants.COLOR_RED)
 
         if self.hp <= 0:
 
@@ -125,7 +125,8 @@ class ai_Test:
 def death_monster(monster):
     '''On death, most monsters stop moving'''
 
-    print(monster.creature.name_instance + " is dead!")
+    game_message(monster.creature.name_instance +
+                 " is dead!", constants.COLOR_GREY)
     monster.creature = None
     monster.ai = None
 
@@ -226,6 +227,7 @@ def draw_game():
         obj.draw()
 
     draw_debug()
+    draw_messages()
 
     # update the display
     pygame.display.flip()
@@ -262,13 +264,36 @@ def draw_map(map_to_draw):
 
 def draw_debug():
     draw_text(SURFACE_MAIN, "fps: " + str(int(CLOCK.get_fps())),
-              (0, 0), constants.COLOR_RED)
+              (0, 0), constants.COLOR_WHITE, constants.COLOR_BLACK)
 
 
-def draw_text(display_surface, text_to_display, T_coords, text_color):
+def draw_messages():
+
+    if len(GAME_MESSAGES) <= constants.NUM_MESSAGES:
+        to_draw = GAME_MESSAGES
+    else:
+        to_draw = GAME_MESSAGES[-constants.NUM_MESSAGES:]
+
+    text_height = helper_text_height(constants.FONT_MESSAGE_TEXT)
+
+    start_y = (constants.MAP_HEIGHT * constants.CELL_HEIGHT -
+               (constants.NUM_MESSAGES * text_height)) - 5
+
+    i = 0
+
+    for message, color in to_draw:
+
+        draw_text(SURFACE_MAIN, message, (0, start_y +
+                                          (i * text_height)), color, constants.COLOR_BLACK)
+
+        i += 1
+
+
+def draw_text(display_surface, text_to_display, T_coords, text_color, back_color=None):
     '''This function takes in some text, and displays it on the referenced surface'''
 
-    text_surf, text_rect = helper_text_objects(text_to_display, text_color)
+    text_surf, text_rect = helper_text_objects(
+        text_to_display, text_color, back_color)
 
     text_rect.topleft = T_coords
 
@@ -285,11 +310,24 @@ def draw_text(display_surface, text_to_display, T_coords, text_color):
 # |/     \|(_______/(_______/|/       (_______/|/   \__/
 
 
-def helper_text_objects(incoming_text, incoming_color):
-    Text_surface = constants.FONT_DEBUG_MESSAGE.render(
-        incoming_text, False, incoming_color)
+def helper_text_objects(incoming_text, incoming_color, incoming_bg):
+    if incoming_bg:
+
+        Text_surface = constants.FONT_DEBUG_MESSAGE.render(
+            incoming_text, False, incoming_color, incoming_bg)
+
+    else:
+        Text_surface = constants.FONT_DEBUG_MESSAGE.render(
+            incoming_text, False, incoming_color)
 
     return Text_surface, Text_surface.get_rect()
+
+
+def helper_text_height(font):
+
+    font_object = font.render('a', False, (0, 0, 0))
+    font_rect = font_object.get_rect()
+    return font_rect.height
 
 
 #  _______  _______  _______  _______
@@ -336,7 +374,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME_MAP, PLAYER, ENEMY, GAME_OBJECTS, FOV_CALCULATE, CLOCK
+    global SURFACE_MAIN, GAME_MAP, PLAYER, ENEMY, GAME_OBJECTS, FOV_CALCULATE, CLOCK, GAME_MESSAGES
     # initialize pygame
     pygame.init()
 
@@ -346,6 +384,8 @@ def game_initialize():
         (constants.MAP_WIDTH * constants.CELL_WIDTH, constants.MAP_HEIGHT * constants.CELL_HEIGHT))
 
     GAME_MAP = map_create()
+
+    GAME_MESSAGES = []
 
     FOV_CALCULATE = True
 
@@ -389,6 +429,11 @@ def game_handle_keys():
                 return "player-moved"
 
     return "no-action"
+
+
+def game_message(game_msg, msg_color):
+
+    GAME_MESSAGES.append((game_msg, msg_color))
 
 
 if __name__ == '__main__':

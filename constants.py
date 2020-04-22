@@ -40,4 +40,8 @@ FOV_LIGHT_WALLS = True
 TORCH_RADIUS = 10
 
 # Fonts
-FONT_DEBUG_MESSAGE = pygame.font.SysFont("comicsans", 24)
+FONT_DEBUG_MESSAGE = pygame.font.SysFont("comicsans", 36)
+FONT_MESSAGE_TEXT = pygame.font.SysFont("comicsans", 30)
+
+# Message Defaults
+NUM_MESSAGES = 4

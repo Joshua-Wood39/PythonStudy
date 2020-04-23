@@ -31,11 +31,11 @@ class struc_Tile:
 # (_______)|/ \___/ (____/   (_______/(_______/   )_(   \_______)
 
 class obj_Actor:
-    def __init__(self, x, y, name_object, animation, creature=None, ai=None):
+    def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None):
         self.x = x  # map addresses
         self.y = y
-        self.animation = animation
-        self.animation_speed = .5  # in seconds
+        self.animation = animation  # list of images
+        self.animation_speed = animation_speed / 1.0  # in seconds
 
         # animation flicker speed
         self.flicker_speed = self.animation_speed / len(self.animation)
@@ -474,16 +474,17 @@ def game_initialize():
 
     charspritesheet = obj_Spritesheet("assets/Reptiles.png")
     enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
-    A_PLAYER = charspritesheet.get_animation('m', 5, 16, 16, 2, (32, 32))
+    A_PLAYER = charspritesheet.get_animation('o', 5, 16, 16, 2, (32, 32))
     A_ENEMY = enemyspritesheet.get_image('k', 1, 16, 16, (32, 32))
 
     creature_com1 = com_Creature("greg")
-    PLAYER = obj_Actor(1, 1, "python", A_PLAYER, creature_com1)
+    PLAYER = obj_Actor(1, 1, "python", A_PLAYER,
+                       animation_speed=1, creature=creature_com1)
 
     creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com = ai_Test()
     ENEMY = obj_Actor(10, 13, "crab", A_ENEMY,
-                      creature_com2, ai_com)
+                      creature=creature_com2, ai=ai_com)
 
     GAME.current_objects = [PLAYER, ENEMY]
 

@@ -35,6 +35,12 @@ class obj_Actor:
         self.x = x  # map addresses
         self.y = y
         self.animation = animation
+        self.animation_speed = .5  # in seconds
+
+        # animation flicker speed
+        self.flicker_speed = self.animation_speed / len(self.animation)
+        self.flicker_timer = 0.0
+        self.sprite_image = 0
 
         self.creature = creature
         if creature:
@@ -51,6 +57,22 @@ class obj_Actor:
             if len(self.animation) == 1:
                 SURFACE_MAIN.blit(
                     self.animation[0], (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
+
+            elif len(self.animation) > 1:
+                if CLOCK.get_fps() > 0.0:
+                    self.flicker_timer += 1 / CLOCK.get_fps()
+
+                if self.flicker_timer >= self.flicker_speed:
+                    self.flicker_timer = 0.0
+
+                    if self.sprite_image >= len(self.animation) - 1:
+                        self.sprite_image = 0
+
+                    else:
+                        self.sprite_image += 1
+
+                SURFACE_MAIN.blit(
+                    self.animation[self.sprite_image], (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
 
 class obj_Game:
@@ -86,6 +108,28 @@ class obj_Spritesheet:
             image = pygame.transform.scale(image, (new_w, new_h))
 
         image_list.append(image)
+
+        return image_list
+
+    def get_animation(self, column, row, width=constants.CELL_WIDTH, height=constants.CELL_HEIGHT, num_sprites=1, scale=None):
+        image_list = []
+
+        for i in range(num_sprites):
+            # Create blank surface
+            image = pygame.Surface([width, height]).convert()
+
+            # Copy image to surface
+            image.blit(self.sprite_sheet, (0, 0), (
+                self.tiledict[column] * width + (width * i), row * height, width, height))
+
+            # Set transparency key to black
+            image.set_colorkey(constants.COLOR_BLACK)
+
+            if scale:
+                (new_w, new_h) = scale
+                image = pygame.transform.scale(image, (new_w, new_h))
+
+            image_list.append(image)
 
         return image_list
 
@@ -430,7 +474,7 @@ def game_initialize():
 
     charspritesheet = obj_Spritesheet("assets/Reptiles.png")
     enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
-    A_PLAYER = charspritesheet.get_image('m', 5, 16, 16, (32, 32))
+    A_PLAYER = charspritesheet.get_animation('m', 5, 16, 16, 2, (32, 32))
     A_ENEMY = enemyspritesheet.get_image('k', 1, 16, 16, (32, 32))
 
     creature_com1 = com_Creature("greg")

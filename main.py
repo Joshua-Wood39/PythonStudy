@@ -31,10 +31,10 @@ class struc_Tile:
 # (_______)|/ \___/ (____/   (_______/(_______/   )_(   \_______)
 
 class obj_Actor:
-    def __init__(self, x, y, name_object, sprite, creature=None, ai=None):
+    def __init__(self, x, y, name_object, animation, creature=None, ai=None):
         self.x = x  # map addresses
         self.y = y
-        self.sprite = sprite
+        self.animation = animation
 
         self.creature = creature
         if creature:
@@ -48,8 +48,9 @@ class obj_Actor:
         is_visible = libtcodpy.map_is_in_fov(FOV_MAP, self.x, self.y)
 
         if is_visible:
-            SURFACE_MAIN.blit(
-                self.sprite, (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
+            if len(self.animation) == 1:
+                SURFACE_MAIN.blit(
+                    self.animation[0], (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
 
 class obj_Game:
@@ -71,6 +72,8 @@ class obj_Spritesheet:
                          'h': 8, 'i': 9, 'j': 10, 'k': 11, 'l': 12, 'm': 13, 'n': 14, 'o': 15, 'p': 16}
 
     def get_image(self, column, row, width=constants.CELL_WIDTH, height=constants.CELL_HEIGHT, scale=None):
+        image_list = []
+
         image = pygame.Surface([width, height]).convert()
 
         image.blit(self.sprite_sheet, (0, 0), (
@@ -82,7 +85,11 @@ class obj_Spritesheet:
             (new_w, new_h) = scale
             image = pygame.transform.scale(image, (new_w, new_h))
 
-        return image
+        image_list.append(image)
+
+        return image_list
+
+
 #  _______  _______  _______  _______  _______  _        _______  _       _________
 # (  ____ \(  ___  )(       )(  ____ )(  ___  )( (    /|(  ____ \( (    /|\__   __/
 # | (    \/| (   ) || () () || (    )|| (   ) ||  \  ( || (    \/|  \  ( |   ) (
@@ -421,15 +428,17 @@ def game_initialize():
 
     # Temp Sprites #
 
-    tempspritesheet = obj_Spritesheet("assets/Aquatic.png")
-    S_PLAYER = tempspritesheet.get_image('h', 1, 16, 16, (32, 32))
+    charspritesheet = obj_Spritesheet("assets/Reptiles.png")
+    enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
+    A_PLAYER = charspritesheet.get_image('m', 5, 16, 16, (32, 32))
+    A_ENEMY = enemyspritesheet.get_image('k', 1, 16, 16, (32, 32))
 
     creature_com1 = com_Creature("greg")
-    PLAYER = obj_Actor(1, 1, "python", S_PLAYER, creature_com1)
+    PLAYER = obj_Actor(1, 1, "python", A_PLAYER, creature_com1)
 
     creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com = ai_Test()
-    ENEMY = obj_Actor(10, 13, "crab", constants.S_ENEMY,
+    ENEMY = obj_Actor(10, 13, "crab", A_ENEMY,
                       creature_com2, ai_com)
 
     GAME.current_objects = [PLAYER, ENEMY]

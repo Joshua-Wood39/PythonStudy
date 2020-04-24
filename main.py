@@ -56,7 +56,7 @@ class struc_Assets:
 
 
 class obj_Actor:
-    def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None):
+    def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None, container=None):
         self.x = x  # map addresses
         self.y = y
         self.animation = animation  # list of images
@@ -68,12 +68,16 @@ class obj_Actor:
         self.sprite_image = 0
 
         self.creature = creature
-        if creature:
-            creature.owner = self
+        if self.creature:
+            self.creature.owner = self
 
         self.ai = ai
-        if ai:
-            ai.owner = self
+        if self.ai:
+            self.ai.owner = self
+
+        self.container = container
+        if self.container:
+            self.container.owner = self
 
     def draw(self):
         is_visible = libtcodpy.map_is_in_fov(FOV_MAP, self.x, self.y)
@@ -207,11 +211,46 @@ class com_Creature:
             if self.death_function is not None:
                 self.death_function(self.owner)
 
-# TODO class com_Item:
+
+class com_Container:
+    def _init__(self, volume=10.0, inventory=[]):
+        self.inventory = inventory
+        self.max_volume = volume
+
+    # TODO Get names of everything in inventory
+
+    # TODO Get the volume within container
+
+    # TODO Get the weight of everything in inventory
 
 
-# TODO class com_Container:
+class com_Item:
+    def __init__(self, weight=0.0, volume=0.0):
+        self.weight = weight
+        self.volume = volume
 
+    # TODO Pick up this item
+    def pick_up(self, actor):
+
+        if actor.container:
+            if actor.container.volume + self.volume > actor.container.max_volume:
+                game_message("Not enough room to pick up!",
+                             constants.COLOR_RED)
+
+            else:
+                game_message("Picking up", constants.COLOR_GREEN)
+                actor.container.inventory.append(self.owner)
+                GAME.current_objects.remove(self.owner)
+                self.current_container = actor.container
+
+    # TODO Drop this item
+
+    def drop(self):
+        GAME.current_objects.append(self.owner)
+        self.current_container.inventory.remove(self.owner)
+        game_message("Item dropped", constants.COLOR_GREY)
+
+    # TODO Use the item ~ item effect
 
 #  _______ _________
 # (  ___  )\__   __/
@@ -221,6 +260,7 @@ class com_Creature:
 # | (   ) |   | |
 # | )   ( |___) (___
 # |/     \|\_______/
+
 
 class ai_Test:
     '''Once per turn, execute'''

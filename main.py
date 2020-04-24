@@ -3,6 +3,8 @@ import constants
 import pygame
 import tcod as libtcodpy
 
+pygame.font.init()
+
 # game files
 
 
@@ -21,6 +23,29 @@ class struc_Tile:
         self.explored = False
 
 
+class struc_Assets:
+    def __init__(self):
+        ## SPRITESHEETS ##
+        self.charspritesheet = obj_Spritesheet("assets/Reptiles.png")
+        self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
+
+        ## ANIMATIONS ##
+        self.A_PLAYER = self.charspritesheet.get_animation(
+            'o', 5, 16, 16, 2, (32, 32))
+        self.A_ENEMY = self.enemyspritesheet.get_animation(
+            'k', 1, 16, 16, 2, (32, 32))
+
+        ## SPRITES ##
+        self.S_WALL = pygame.image.load("assets/Wall2.jpg")
+        self.S_FLOOR = pygame.image.load("assets/Floor.jpg")
+        self.S_FLOOREXPLORED = pygame.image.load("assets/FloorUnseen.png")
+        self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
+
+        ## FONTS ##
+        self.FONT_DEBUG_MESSAGE = pygame.font.SysFont("comicsans", 36)
+        self.FONT_MESSAGE_TEXT = pygame.font.SysFont("comicsans", 30)
+
+
 #  _______  ______  _________ _______  _______ _________ _______
 # (  ___  )(  ___ \ \__    _/(  ____ \(  ____ \\__   __/(  ____ \
 # | (   ) || (   ) )   )  (  | (    \/| (    \/   ) (   | (    \/
@@ -29,6 +54,7 @@ class struc_Tile:
 # | |   | || (  \ \    |  |  | (      | |         | |         ) |
 # | (___) || )___) )|\_)  )  | (____/\| (____/\   | |   /\____) |
 # (_______)|/ \___/ (____/   (_______/(_______/   )_(   \_______)
+
 
 class obj_Actor:
     def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None):
@@ -329,20 +355,20 @@ def draw_map(map_to_draw):
                 if map_to_draw[x][y].block_path == True:
                     # draw wall
                     SURFACE_MAIN.blit(
-                        constants.S_WALL, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+                        ASSETS.S_WALL, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
                 else:
                     # draw floor
                     SURFACE_MAIN.blit(
-                        constants.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+                        ASSETS.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
 
             elif map_to_draw[x][y].explored:
 
                 if map_to_draw[x][y].block_path == True:
                     SURFACE_MAIN.blit(
-                        constants.S_WALLEXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+                        ASSETS.S_WALLEXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
                 else:
                     SURFACE_MAIN.blit(
-                        constants.S_FLOOREXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
+                        ASSETS.S_FLOOREXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
 
 
 def draw_debug():
@@ -357,7 +383,7 @@ def draw_messages():
     else:
         to_draw = GAME.message_history[-constants.NUM_MESSAGES:]
 
-    text_height = helper_text_height(constants.FONT_MESSAGE_TEXT)
+    text_height = helper_text_height(ASSETS.FONT_MESSAGE_TEXT)
 
     start_y = (constants.MAP_HEIGHT * constants.CELL_HEIGHT -
                (constants.NUM_MESSAGES * text_height)) - 5
@@ -396,11 +422,11 @@ def draw_text(display_surface, text_to_display, T_coords, text_color, back_color
 def helper_text_objects(incoming_text, incoming_color, incoming_bg):
     if incoming_bg:
 
-        Text_surface = constants.FONT_DEBUG_MESSAGE.render(
+        Text_surface = ASSETS.FONT_DEBUG_MESSAGE.render(
             incoming_text, False, incoming_color, incoming_bg)
 
     else:
-        Text_surface = constants.FONT_DEBUG_MESSAGE.render(
+        Text_surface = ASSETS.FONT_DEBUG_MESSAGE.render(
             incoming_text, False, incoming_color)
 
     return Text_surface, Text_surface.get_rect()
@@ -457,7 +483,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY
+    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY, ASSETS
     # initialize pygame
     pygame.init()
 
@@ -470,20 +496,15 @@ def game_initialize():
 
     FOV_CALCULATE = True
 
-    # Temp Sprites #
-
-    charspritesheet = obj_Spritesheet("assets/Reptiles.png")
-    enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
-    A_PLAYER = charspritesheet.get_animation('o', 5, 16, 16, 2, (32, 32))
-    A_ENEMY = enemyspritesheet.get_image('k', 1, 16, 16, (32, 32))
+    ASSETS = struc_Assets()
 
     creature_com1 = com_Creature("greg")
-    PLAYER = obj_Actor(1, 1, "python", A_PLAYER,
+    PLAYER = obj_Actor(1, 1, "python", ASSETS.A_PLAYER,
                        animation_speed=1, creature=creature_com1)
 
     creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com = ai_Test()
-    ENEMY = obj_Actor(10, 13, "crab", A_ENEMY,
+    ENEMY = obj_Actor(10, 13, "crab", ASSETS.A_ENEMY,
                       creature=creature_com2, ai=ai_com)
 
     GAME.current_objects = [PLAYER, ENEMY]

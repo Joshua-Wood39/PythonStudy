@@ -3,7 +3,6 @@ import constants
 import pygame
 import tcod as libtcodpy
 
-pygame.font.init()
 
 # game files
 
@@ -486,6 +485,7 @@ def game_initialize():
     global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY, ASSETS
     # initialize pygame
     pygame.init()
+    pygame.font.init()
 
     SURFACE_MAIN = pygame.display.set_mode(
         (constants.MAP_WIDTH * constants.CELL_WIDTH, constants.MAP_HEIGHT * constants.CELL_HEIGHT))
@@ -504,7 +504,7 @@ def game_initialize():
 
     creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com = ai_Test()
-    ENEMY = obj_Actor(10, 13, "crab", ASSETS.A_ENEMY,
+    ENEMY = obj_Actor(10, 13, "crab", ASSETS.A_ENEMY, animation_speed=1,
                       creature=creature_com2, ai=ai_com)
 
     GAME.current_objects = [PLAYER, ENEMY]

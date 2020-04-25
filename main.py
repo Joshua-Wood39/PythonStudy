@@ -451,6 +451,13 @@ def helper_text_height(font):
     return font_rect.height
 
 
+def helper_text_width(font):
+
+    font_object = font.render('a', False, (0, 0, 0))
+    font_rect = font_object.get_rect()
+    return font_rect.width
+
+
 ##############################################################################
 # MENUS
 ##############################################################################
@@ -459,6 +466,15 @@ def helper_text_height(font):
 def menu_pause():
     ''' This menu pauses the game and displays a simple message '''
     menu_close = False
+
+    window_width = constants.MAP_WIDTH * constants.CELL_WIDTH
+    window_height = constants.MAP_HEIGHT * constants.CELL_HEIGHT
+
+    menu_text = "PAUSED"
+    menu_font = constants.FONT_DEBUG_MESSAGE
+
+    text_height = helper_text_height(menu_font)
+    text_width = len(menu_text) * helper_text_width(menu_font)
 
     while not menu_close:
 
@@ -471,8 +487,8 @@ def menu_pause():
                 if event.key == pygame.K_p:
                     menu_close = True
 
-        draw_text(SURFACE_MAIN, "PAUSED", constants.FONT_DEBUG_MESSAGE, (constants.GAME_WIDTH /
-                                                                         2, constants.GAME_HEIGHT / 2), constants.COLOR_WHITE, constants.COLOR_BLACK)
+        draw_text(SURFACE_MAIN, menu_text, constants.FONT_DEBUG_MESSAGE, ((window_width /
+                                                                           2) - (text_width / 2), (window_height / 2) - (text_height / 2)), constants.COLOR_WHITE, constants.COLOR_BLACK)
 
         pygame.display.flip()
 

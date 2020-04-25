@@ -1,4 +1,7 @@
 import tcod as libtcodpy
+import pygame
+pygame.init()
+pygame.font.init()
 
 
 # Game Sizes
@@ -33,3 +36,8 @@ TORCH_RADIUS = 10
 
 # Message Defaults
 NUM_MESSAGES = 4
+
+
+# Fonts
+FONT_DEBUG_MESSAGE = pygame.font.SysFont("comicsans", 36)
+FONT_MESSAGE_TEXT = pygame.font.SysFont("comicsans", 30)

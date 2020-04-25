@@ -33,10 +33,6 @@ class struc_Assets:
         self.S_FLOOREXPLORED = pygame.image.load("assets/FloorUnseen.png")
         self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
 
-        ## FONTS ##
-        self.FONT_DEBUG_MESSAGE = pygame.font.SysFont("comicsans", 36)
-        self.FONT_MESSAGE_TEXT = pygame.font.SysFont("comicsans", 30)
-
 
 ##############################################################################
 # OBJECTS
@@ -393,7 +389,7 @@ def draw_map(map_to_draw):
 
 
 def draw_debug():
-    draw_text(SURFACE_MAIN, "fps: " + str(int(CLOCK.get_fps())),
+    draw_text(SURFACE_MAIN, "fps: " + str(int(CLOCK.get_fps())), constants.FONT_DEBUG_MESSAGE,
               (0, 0), constants.COLOR_WHITE, constants.COLOR_BLACK)
 
 
@@ -404,7 +400,7 @@ def draw_messages():
     else:
         to_draw = GAME.message_history[-constants.NUM_MESSAGES:]
 
-    text_height = helper_text_height(ASSETS.FONT_MESSAGE_TEXT)
+    text_height = helper_text_height(constants.FONT_MESSAGE_TEXT)
 
     start_y = (constants.MAP_HEIGHT * constants.CELL_HEIGHT -
                (constants.NUM_MESSAGES * text_height)) - 5
@@ -419,11 +415,11 @@ def draw_messages():
         i += 1
 
 
-def draw_text(display_surface, text_to_display, T_coords, text_color, back_color=None):
+def draw_text(display_surface, text_to_display, font, T_coords, text_color, back_color=None):
     '''This function takes in some text, and displays it on the referenced surface'''
 
     text_surf, text_rect = helper_text_objects(
-        text_to_display, text_color, back_color)
+        text_to_display, font, text_color, back_color)
 
     text_rect.topleft = T_coords
 
@@ -435,14 +431,14 @@ def draw_text(display_surface, text_to_display, T_coords, text_color, back_color
 ##############################################################################
 
 
-def helper_text_objects(incoming_text, incoming_color, incoming_bg):
+def helper_text_objects(incoming_text, incoming_font, incoming_color, incoming_bg):
     if incoming_bg:
 
-        Text_surface = ASSETS.FONT_DEBUG_MESSAGE.render(
+        Text_surface = incoming_font.render(
             incoming_text, False, incoming_color, incoming_bg)
 
     else:
-        Text_surface = ASSETS.FONT_DEBUG_MESSAGE.render(
+        Text_surface = incoming_font.render(
             incoming_text, False, incoming_color)
 
     return Text_surface, Text_surface.get_rect()
@@ -460,9 +456,31 @@ def helper_text_height(font):
 ##############################################################################
 
 
+def menu_pause():
+    ''' This menu pauses the game and displays a simple message '''
+    menu_close = False
+
+    while not menu_close:
+
+        events_list = pygame.event.get()
+
+        for event in events_list:
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_p:
+                    menu_close = True
+
+        draw_text(SURFACE_MAIN, "PAUSED", constants.FONT_DEBUG_MESSAGE, (constants.GAME_WIDTH /
+                                                                         2, constants.GAME_HEIGHT / 2), constants.COLOR_WHITE, constants.COLOR_BLACK)
+
+        pygame.display.flip()
+
+
 ##############################################################################
 # GAME
 ##############################################################################
+
 
 def game_main_loop():
     '''In this function we loop the main game'''
@@ -567,6 +585,9 @@ def game_handle_keys():
                 if len(PLAYER.container.inventory) > 0:
                     PLAYER.container.inventory[-1].item.drop(
                         PLAYER.x, PLAYER.y)
+
+            if event.key == pygame.K_p:
+                menu_pause()
 
     return "no-action"
 

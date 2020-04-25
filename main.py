@@ -56,13 +56,13 @@ class struc_Assets:
 
 
 class obj_Actor:
-    def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None, container=None):
+    def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None, container=None, item=None):
         self.x = x  # map addresses
         self.y = y
         self.animation = animation  # list of images
         self.animation_speed = animation_speed / 1.0  # in seconds
 
-        # animation flicker speed
+        # animation flicker speedd
         self.flicker_speed = self.animation_speed / len(self.animation)
         self.flicker_timer = 0.0
         self.sprite_image = 0
@@ -78,6 +78,10 @@ class obj_Actor:
         self.container = container
         if self.container:
             self.container.owner = self
+
+        self.item = item
+        if self.item:
+            self.item.owner = self
 
     def draw(self):
         is_visible = libtcodpy.map_is_in_fov(FOV_MAP, self.x, self.y)
@@ -213,14 +217,16 @@ class com_Creature:
 
 
 class com_Container:
-    def _init__(self, volume=10.0, inventory=[]):
+    def __init__(self, volume=10.0, inventory=[]):
         self.inventory = inventory
         self.max_volume = volume
 
     # TODO Get names of everything in inventory
 
     # TODO Get the volume within container
-
+    @property
+    def volume(self):
+        return 0.0
     # TODO Get the weight of everything in inventory
 
 
@@ -229,7 +235,6 @@ class com_Item:
         self.weight = weight
         self.volume = volume
 
-    # TODO Pick up this item
     def pick_up(self, actor):
 
         if actor.container:
@@ -241,13 +246,13 @@ class com_Item:
                 game_message("Picking up", constants.COLOR_GREEN)
                 actor.container.inventory.append(self.owner)
                 GAME.current_objects.remove(self.owner)
-                self.current_container = actor.container
+                self.container = actor.container
 
-    # TODO Drop this item
-
-    def drop(self):
+    def drop(self, new_x, new_y):
         GAME.current_objects.append(self.owner)
-        self.current_container.inventory.remove(self.owner)
+        self.container.inventory.remove(self.owner)
+        self.owner.x = new_x
+        self.owner.y = new_y
         game_message("Item dropped", constants.COLOR_GREY)
 
     # TODO Use the item ~ item effect
@@ -349,6 +354,14 @@ def map_calculate_fov():
         FOV_CALCULATE = False
         libtcodpy.map_compute_fov(
             FOV_MAP, PLAYER.x, PLAYER.y, constants.TORCH_RADIUS, constants.FOV_LIGHT_WALLS, constants.FOV_ALGO)
+
+
+def map_objects_at_coords(coords_x, coords_y):
+
+    object_options = [
+        obj for obj in GAME.current_objects if obj.x == coords_x and obj.y == coords_y]
+
+    return object_options
 
 
 #  ______   _______  _______
@@ -538,14 +551,16 @@ def game_initialize():
 
     ASSETS = struc_Assets()
 
+    container_com1 = com_Container()
     creature_com1 = com_Creature("greg")
     PLAYER = obj_Actor(1, 1, "python", ASSETS.A_PLAYER,
-                       animation_speed=1, creature=creature_com1)
+                       animation_speed=1, creature=creature_com1, container=container_com1)
 
+    item_com1 = com_Item()
     creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com = ai_Test()
     ENEMY = obj_Actor(10, 13, "crab", ASSETS.A_ENEMY, animation_speed=1,
-                      creature=creature_com2, ai=ai_com)
+                      creature=creature_com2, ai=ai_com, item=item_com1)
 
     GAME.current_objects = [PLAYER, ENEMY]
 
@@ -578,10 +593,22 @@ def game_handle_keys():
                 FOV_CALCULATE = True
                 return "player-moved"
 
+            if event.key == pygame.K_g:
+                objects_at_player = map_objects_at_coords(PLAYER.x, PLAYER.y)
+
+                for obj in objects_at_player:
+                    if obj.item:
+                        obj.item.pick_up(PLAYER)
+
+            if event.key == pygame.K_d:
+                if len(PLAYER.container.inventory) > 0:
+                    PLAYER.container.inventory[-1].item.drop(
+                        PLAYER.x, PLAYER.y)
+
     return "no-action"
 
 
-def game_message(game_msg, msg_color):
+def game_message(game_msg, msg_color=constants.COLOR_GREY):
 
     GAME.message_history.append((game_msg, msg_color))
 

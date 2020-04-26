@@ -24,8 +24,10 @@ class struc_Assets:
         ## ANIMATIONS ##
         self.A_PLAYER = self.charspritesheet.get_animation(
             'o', 5, 16, 16, 2, (32, 32))
-        self.A_ENEMY = self.enemyspritesheet.get_animation(
+        self.A_ENEMY1 = self.enemyspritesheet.get_animation(
             'k', 1, 16, 16, 2, (32, 32))
+        self.A_ENEMY2 = self.enemyspritesheet.get_animation(
+            'a', 5, 16, 16, 2, (32, 32))
 
         ## SPRITES ##
         self.S_WALL = pygame.image.load("assets/Wall2.jpg")
@@ -43,6 +45,7 @@ class obj_Actor:
     def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None, container=None, item=None):
         self.x = x  # map addresses
         self.y = y
+        self.name_object = name_object
         self.animation = animation  # list of images
         self.animation_speed = animation_speed / 1.0  # in seconds
 
@@ -409,8 +412,8 @@ def draw_messages():
 
     for message, color in to_draw:
 
-        draw_text(SURFACE_MAIN, message, (0, start_y +
-                                          (i * text_height)), color, constants.COLOR_BLACK)
+        draw_text(SURFACE_MAIN, message, constants.FONT_MESSAGE_TEXT, (0, start_y +
+                                                                       (i * text_height)), color, constants.COLOR_BLACK)
 
         i += 1
 
@@ -493,6 +496,54 @@ def menu_pause():
         pygame.display.flip()
 
 
+def menu_inventory():
+
+    menu_close = False
+    menu_width = 200
+    menu_height = 200
+
+    window_width = constants.MAP_WIDTH * constants.CELL_WIDTH
+    window_height = constants.MAP_HEIGHT * constants.CELL_HEIGHT
+
+    menu_text_font = constants.FONT_MESSAGE_TEXT
+
+    menu_text_height = helper_text_height(menu_text_font)
+    menu_text_color = constants.COLOR_WHITE
+
+    local_inventory_surface = pygame.Surface((menu_width, menu_height))
+
+    while not menu_close:
+
+        # Clear the menu
+        local_inventory_surface.fill(constants.COLOR_BLACK)
+
+        # Register changes
+
+        print_list = [obj.name_object for obj in PLAYER.container.inventory]
+
+        events_list = pygame.event.get()
+
+        for event in events_list:
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_i:
+                    menu_close = True
+
+        # Draw the list
+
+        for i, (name) in enumerate(print_list):
+
+            draw_text(local_inventory_surface, name, menu_text_font,
+                      (0, 0 + (i * menu_text_height)), menu_text_color)
+
+        # Display Menu
+        SURFACE_MAIN.blit(local_inventory_surface,
+                          ((window_width / 2) - (menu_width / 2), (window_height / 2) - (menu_height / 2)))
+
+        pygame.display.flip()
+
+
 ##############################################################################
 # GAME
 ##############################################################################
@@ -532,7 +583,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY, ASSETS
+    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY, ENEMY2, ASSETS
     # initialize pygame
     pygame.init()
     pygame.font.init()
@@ -555,11 +606,17 @@ def game_initialize():
 
     item_com1 = com_Item()
     creature_com2 = com_Creature("jackie", death_function=death_monster)
-    ai_com = ai_Test()
-    ENEMY = obj_Actor(10, 13, "crab", ASSETS.A_ENEMY, animation_speed=1,
-                      creature=creature_com2, ai=ai_com, item=item_com1)
+    ai_com1 = ai_Test()
+    ENEMY = obj_Actor(10, 13, "rock lobster", ASSETS.A_ENEMY1, animation_speed=1,
+                      creature=creature_com2, ai=ai_com1, item=item_com1)
 
-    GAME.current_objects = [PLAYER, ENEMY]
+    item_com2 = com_Item()
+    creature_com3 = com_Creature("bob", death_function=death_monster)
+    ai_com2 = ai_Test()
+    ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,
+                       creature=creature_com3, ai=ai_com2, item=item_com2)
+
+    GAME.current_objects = [PLAYER, ENEMY, ENEMY2]
 
 
 def game_handle_keys():
@@ -604,6 +661,9 @@ def game_handle_keys():
 
             if event.key == pygame.K_p:
                 menu_pause()
+
+            if event.key == pygame.K_i:
+                menu_inventory()
 
     return "no-action"
 

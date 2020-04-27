@@ -493,6 +493,8 @@ def menu_pause():
         draw_text(SURFACE_MAIN, menu_text, constants.FONT_DEBUG_MESSAGE, ((window_width /
                                                                            2) - (text_width / 2), (window_height / 2) - (text_height / 2)), constants.COLOR_WHITE, constants.COLOR_BLACK)
 
+        CLOCK.tick(constants.GAME_FPS)
+
         pygame.display.flip()
 
 
@@ -504,6 +506,9 @@ def menu_inventory():
 
     window_width = constants.MAP_WIDTH * constants.CELL_WIDTH
     window_height = constants.MAP_HEIGHT * constants.CELL_HEIGHT
+
+    menu_x = (window_width / 2) - (menu_width / 2)
+    menu_y = (window_height / 2) - (menu_height / 2)
 
     menu_text_font = constants.FONT_MESSAGE_TEXT
 
@@ -522,6 +527,11 @@ def menu_inventory():
         print_list = [obj.name_object for obj in PLAYER.container.inventory]
 
         events_list = pygame.event.get()
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # Setting coords for in-menu mouse location
+        mouse_x_rel = mouse_x - menu_x
+        mouse_y_rel = mouse_y - menu_y
 
         for event in events_list:
 
@@ -539,7 +549,9 @@ def menu_inventory():
 
         # Display Menu
         SURFACE_MAIN.blit(local_inventory_surface,
-                          ((window_width / 2) - (menu_width / 2), (window_height / 2) - (menu_height / 2)))
+                          (menu_x, menu_y))
+
+        CLOCK.tick(constants.GAME_FPS)
 
         pygame.display.flip()
 
@@ -586,6 +598,9 @@ def game_initialize():
     global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY, ENEMY2, ASSETS
     # initialize pygame
     pygame.init()
+
+    pygame.key.set_repeat(200, 70)  # first delay, 200ms, then 70ms after
+
     pygame.font.init()
 
     SURFACE_MAIN = pygame.display.set_mode(

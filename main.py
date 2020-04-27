@@ -2,6 +2,7 @@
 import constants
 import pygame
 import tcod as libtcodpy
+import math
 
 
 ##############################################################################
@@ -533,6 +534,13 @@ def menu_inventory():
         mouse_x_rel = mouse_x - menu_x
         mouse_y_rel = mouse_y - menu_y
 
+        mouse_in_window = (mouse_x_rel > 0 and
+                           mouse_y_rel > 0 and
+                           mouse_x_rel < menu_width and
+                           mouse_y_rel < menu_height)
+
+        mouse_line_selection = math.floor(mouse_y_rel / menu_text_height)
+
         for event in events_list:
 
             if event.type == pygame.KEYDOWN:
@@ -540,12 +548,30 @@ def menu_inventory():
                 if event.key == pygame.K_i:
                     menu_close = True
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if (mouse_in_window and
+                            mouse_line_selection <= len(print_list) - 1):
+                        PLAYER.container.inventory[mouse_line_selection].item.drop(
+                            PLAYER.x, PLAYER.y)
+
         # Draw the list
 
-        for i, (name) in enumerate(print_list):
+        for line, (name) in enumerate(print_list):
 
-            draw_text(local_inventory_surface, name, menu_text_font,
-                      (0, 0 + (i * menu_text_height)), menu_text_color)
+            if line == mouse_line_selection and mouse_in_window:
+                draw_text(local_inventory_surface,
+                          name,
+                          menu_text_font,
+                          (0, 0 + (line * menu_text_height)),
+                          menu_text_color,
+                          constants.COLOR_GREY)
+            else:
+                draw_text(local_inventory_surface,
+                          name,
+                          menu_text_font,
+                          (0, 0 + (line * menu_text_height)),
+                          menu_text_color)
 
         # Display Menu
         SURFACE_MAIN.blit(local_inventory_surface,

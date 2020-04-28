@@ -165,8 +165,8 @@ class com_Creature:
 
     def __init__(self, name_instance, hp=10, death_function=None):
         self.name_instance = name_instance
-        self.hp = hp
-        self.maxhp = hp
+        self.current_hp = hp
+        self.max_hp = hp
         self.death_function = death_function
 
     def move(self, dx, dy):
@@ -189,14 +189,19 @@ class com_Creature:
         target.creature.take_damage(damage)
 
     def take_damage(self, damage):
-        self.hp -= damage
+        self.current_hp -= damage
         game_message(self.name_instance + "'s health is " +
-                     str(self.hp) + "/" + str(self.maxhp), constants.COLOR_RED)
+                     str(self.current_hp) + "/" + str(self.max_hp), constants.COLOR_RED)
 
-        if self.hp <= 0:
+        if self.current_hp <= 0:
 
             if self.death_function is not None:
                 self.death_function(self.owner)
+
+    def heal(self, value):
+        self.current_hp += value
+        if self.current_hp > self.max_hp:
+            self.current_hp = self.max_hp
 
 
 class com_Container:
@@ -214,9 +219,11 @@ class com_Container:
 
 
 class com_Item:
-    def __init__(self, weight=0.0, volume=0.0):
+    def __init__(self, weight=0.0, volume=0.0, use_function=None, value=None):
         self.weight = weight
         self.volume = volume
+        self.use_function = use_function
+        self.value = value
 
     def pick_up(self, actor):
 
@@ -238,7 +245,16 @@ class com_Item:
         self.owner.y = new_y
         game_message("Item dropped", constants.COLOR_GREY)
 
-    # TODO Use the item ~ item effect
+    def use(self):
+        '''Use the item by producing an effect and removing it'''
+        if self.use_function:
+            result = self.use_function(self.container.owner, self.value)
+
+            if result is not None:
+                print("use_function failed")
+
+            else:
+                self.container.inventory.remove(self.owner)
 
 
 ##############################################################################
@@ -463,6 +479,24 @@ def helper_text_width(font):
 
 
 ##############################################################################
+# MAGIC
+##############################################################################
+
+
+def cast_heal(target, value):
+    if target.creature.current_hp == target.creature.max_hp:
+        game_message(target.creature.name_instance + " the " +
+                     target.name_object + " is already at full health!")
+        return "canceled"
+    else:
+        game_message(target.creature.name_instance + " the " + target.name_object +
+                     " healed for " + str(value) + " health!")
+        target.creature.heal(value)
+        print(target.creature.current_hp)
+    return None
+
+
+##############################################################################
 # MENUS
 ##############################################################################
 
@@ -552,8 +586,8 @@ def menu_inventory():
                 if event.button == 1:
                     if (mouse_in_window and
                             mouse_line_selection <= len(print_list) - 1):
-                        PLAYER.container.inventory[mouse_line_selection].item.drop(
-                            PLAYER.x, PLAYER.y)
+                        PLAYER.container.inventory[mouse_line_selection].item.use(
+                        )
 
         # Draw the list
 
@@ -645,13 +679,13 @@ def game_initialize():
     PLAYER = obj_Actor(1, 1, "python", ASSETS.A_PLAYER,
                        animation_speed=1, creature=creature_com1, container=container_com1)
 
-    item_com1 = com_Item()
+    item_com1 = com_Item(use_function=cast_heal, value=4)
     creature_com2 = com_Creature("jackie", death_function=death_monster)
     ai_com1 = ai_Test()
     ENEMY = obj_Actor(10, 13, "rock lobster", ASSETS.A_ENEMY1, animation_speed=1,
                       creature=creature_com2, ai=ai_com1, item=item_com1)
 
-    item_com2 = com_Item()
+    item_com2 = com_Item(use_function=cast_heal, value=5)
     creature_com3 = com_Creature("bob", death_function=death_monster)
     ai_com2 = ai_Test()
     ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,

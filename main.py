@@ -377,7 +377,7 @@ def draw_game():
     draw_messages()
 
     # update the display
-    pygame.display.flip()
+    # pygame.display.flip()
 
 
 def draw_map(map_to_draw):
@@ -652,6 +652,19 @@ def menu_tile_select():
         # Mouse map selection
         map_coord_x = math.floor(mouse_x/constants.CELL_WIDTH)
         map_coord_y = math.floor(mouse_y/constants.CELL_HEIGHT)
+
+        # Return map coords when presses left mouse-button
+        for event in events_list:
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_l:
+                    menu_close = True
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    # Will turn into a return
+                    game_message(str((map_coord_x, map_coord_y)))
 
         # Draw game first
         draw_game()

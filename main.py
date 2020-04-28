@@ -278,6 +278,7 @@ def death_monster(monster):
     monster.creature = None
     monster.ai = None
 
+
 ##############################################################################
 # MAP
 ##############################################################################
@@ -444,6 +445,22 @@ def draw_text(display_surface, text_to_display, font, T_coords, text_color, back
     text_rect.topleft = T_coords
 
     display_surface.blit(text_surf, text_rect)
+
+
+def draw_tile_rect(coords):
+
+    x, y = coords
+
+    new_x = x * constants.CELL_WIDTH
+    new_y = y * constants.CELL_HEIGHT
+
+    new_surface = pygame.Surface((constants.CELL_WIDTH, constants.CELL_HEIGHT))
+
+    new_surface.fill(constants.COLOR_WHITE)
+
+    new_surface.set_alpha(200)  # setting opacity
+
+    SURFACE_MAIN.blit(new_surface, (new_x, new_y))
 
 
 ##############################################################################
@@ -616,6 +633,39 @@ def menu_inventory():
         pygame.display.flip()
 
 
+def menu_tile_select():
+    ''' This menu lets the player select a tile. 
+    This function pauses the game, produces an on-screen rectangle
+    and when the player presses the left mouse-button, will return
+    (message for now) the map address
+    '''
+    menu_close = False
+
+    while not menu_close:
+
+        # Get mouse position
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # Get button clicks
+        events_list = pygame.event.get()
+
+        # Mouse map selection
+        map_coord_x = math.floor(mouse_x/constants.CELL_WIDTH)
+        map_coord_y = math.floor(mouse_y/constants.CELL_HEIGHT)
+
+        # Draw game first
+        draw_game()
+
+        # Draw rectangle at mouse position on top of game
+        draw_tile_rect((map_coord_x, map_coord_y))
+
+        # Update the display
+        pygame.display.flip()
+
+        # Tick the CLOCK
+        CLOCK.tick(constants.GAME_FPS)
+
+
 ##############################################################################
 # GAME
 ##############################################################################
@@ -646,6 +696,10 @@ def game_main_loop():
         # draw the game
         draw_game()
 
+        # update the game
+        pygame.display.flip()
+
+        # tick the CLOCK
         CLOCK.tick(constants.GAME_FPS)
 
     pygame.quit()
@@ -739,6 +793,10 @@ def game_handle_keys():
 
             if event.key == pygame.K_i:
                 menu_inventory()
+
+            # key 'l' --> turn on tile selection
+            if event.key == pygame.K_l:
+                menu_tile_select()
 
     return "no-action"
 

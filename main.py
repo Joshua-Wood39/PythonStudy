@@ -355,6 +355,33 @@ def map_objects_at_coords(coords_x, coords_y):
     return object_options
 
 
+def map_find_line(coords1, coords2):
+    ''' Converts two x, y coords into a list of tiles.
+
+    coords1 : (x1, y1)
+    coords2 : (x2, y2)
+    '''
+    x1, y1 = coords1
+    x2, y2 = coords2
+
+    libtcodpy.line_init(x1, y1, x2, y2)
+
+    calc_x, calc_y = libtcodpy.line_step()
+
+    coord_list = []
+
+    if x1 == x2 and y1 == y2:
+        return [(x1, y1)]
+
+    while (not calc_x is None):
+
+        coord_list.append((calc_x, calc_y))
+
+        calc_x, calc_y = libtcodpy.line_step()
+
+    return coord_list
+
+
 ##############################################################################
 # DRAW
 ##############################################################################
@@ -513,6 +540,23 @@ def cast_heal(target, value):
     return None
 
 
+def cast_lightning(damage):
+
+    # Prompt player for a tile
+    point_selected = menu_tile_select()
+
+    # Convert that tile into a list of tiles between A --> B
+    list_of_tiles = map_find_line((PLAYER.x, PLAYER.y), point_selected)
+
+    # Cycle through list, damage everything found
+    for i, (x, y) in enumerate(list_of_tiles):
+
+        target = map_check_for_creatures(x, y)
+
+        if target and i != 0:
+            target.creature.take_damage(damage)
+
+
 ##############################################################################
 # MENUS
 ##############################################################################
@@ -663,8 +707,8 @@ def menu_tile_select():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    # Will turn into a return
-                    game_message(str((map_coord_x, map_coord_y)))
+                    # Returns coord selected
+                    return(map_coord_x, map_coord_y)
 
         # Draw game first
         draw_game()
@@ -809,7 +853,7 @@ def game_handle_keys():
 
             # key 'l' --> turn on tile selection
             if event.key == pygame.K_l:
-                menu_tile_select()
+                cast_lightning(10)
 
     return "no-action"
 

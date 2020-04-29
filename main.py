@@ -542,11 +542,13 @@ def cast_heal(target, value):
 
 def cast_lightning(damage):
 
+    player_location = (PLAYER.x, PLAYER.y)
     # Prompt player for a tile
-    point_selected = menu_tile_select()
+    point_selected = menu_tile_select(
+        coords_origin=player_location, max_range=5)
 
     # Convert that tile into a list of tiles between A --> B
-    list_of_tiles = map_find_line((PLAYER.x, PLAYER.y), point_selected)
+    list_of_tiles = map_find_line(player_location, point_selected)
 
     # Cycle through list, damage everything found
     for i, (x, y) in enumerate(list_of_tiles):
@@ -677,7 +679,7 @@ def menu_inventory():
         pygame.display.flip()
 
 
-def menu_tile_select():
+def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True):
     ''' This menu lets the player select a tile. 
     This function pauses the game, produces an on-screen rectangle
     and when the player presses the left mouse-button, will return
@@ -697,6 +699,20 @@ def menu_tile_select():
         map_coord_x = math.floor(mouse_x/constants.CELL_WIDTH)
         map_coord_y = math.floor(mouse_y/constants.CELL_HEIGHT)
 
+        valid_tiles = []
+
+        if coords_origin:
+            full_list_tiles = map_find_line(
+                coords_origin, (map_coord_x, map_coord_y))
+
+            for i, (x, y) in enumerate(full_list_tiles):
+                valid_tiles.append((x, y))
+                if max_range and i == max_range:
+                    break
+
+        else:
+            valid_tiles = [(map_coord_x, map_coord_y)]
+
         # Return map coords when presses left mouse-button
         for event in events_list:
 
@@ -708,13 +724,14 @@ def menu_tile_select():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     # Returns coord selected
-                    return(map_coord_x, map_coord_y)
+                    return(valid_tiles[-1])
 
         # Draw game first
         draw_game()
 
         # Draw rectangle at mouse position on top of game
-        draw_tile_rect((map_coord_x, map_coord_y))
+        for (tile_x, tile_y) in valid_tiles:
+            draw_tile_rect((tile_x, tile_y))
 
         # Update the display
         pygame.display.flip()

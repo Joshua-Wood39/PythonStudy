@@ -95,6 +95,23 @@ class obj_Actor:
                 SURFACE_MAIN.blit(
                     self.animation[self.sprite_image], (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
+    def distance_to(self, other):
+        dx = other.x - self.x
+        dy = other.y - self.y
+
+        return math.sqrt(dx ** 2 + dy ** 2)
+
+    def move_towards(self, other):
+        dx = other.x - self.x
+        dy = other.y - self.y
+
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+
+        dx = int(round(dx / distance))
+        dy = int(round(dy / distance))
+
+        self.creature.move(dx, dy)
+
 
 class obj_Game:
     def __init__(self):
@@ -262,12 +279,29 @@ class com_Item:
 ##############################################################################
 
 
-class ai_Test:
+class ai_Confuse:
     '''Once per turn, execute'''
 
     def take_turn(self):
         self.owner.creature.move(libtcodpy.random_get_int(0, -1, 1),
                                  libtcodpy.random_get_int(0, -1, 1))
+
+
+class ai_Chase:
+    ''' A basic monster ai which chases and tries to harm player.'''
+
+    def take_turn(self):
+        monster = self.owner
+
+        if libtcodpy.map_is_in_fov(FOV_MAP, monster.x, monster.y):
+
+            # TODO Move towards the player if far away
+            if monster.distance_to(PLAYER) >= 2:
+                self.owner.move_towards(PLAYER)
+
+            # TODO If close enough, attack player
+            elif PLAYER.creature.current_hp > 0:
+                monster.creature.attack(PLAYER, 3)
 
 
 def death_monster(monster):
@@ -621,6 +655,10 @@ def cast_fireball():
             game_message("The monster howls out in pain.", constants.COLOR_RED)
 
 
+def cast_confusion():
+    pass
+
+
 ##############################################################################
 # MENUS
 ##############################################################################
@@ -890,13 +928,13 @@ def game_initialize():
 
     item_com1 = com_Item(use_function=cast_heal, value=4)
     creature_com2 = com_Creature("jackie", death_function=death_monster)
-    ai_com1 = ai_Test()
+    ai_com1 = ai_Chase()
     ENEMY = obj_Actor(10, 13, "rock lobster", ASSETS.A_ENEMY1, animation_speed=1,
                       creature=creature_com2, ai=ai_com1, item=item_com1)
 
     item_com2 = com_Item(use_function=cast_heal, value=5)
     creature_com3 = com_Creature("bob", death_function=death_monster)
-    ai_com2 = ai_Test()
+    ai_com2 = ai_Chase()
     ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,
                        creature=creature_com3, ai=ai_com2, item=item_com2)
 

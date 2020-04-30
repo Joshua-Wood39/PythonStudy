@@ -526,18 +526,21 @@ def draw_messages():
         i += 1
 
 
-def draw_text(display_surface, text_to_display, font, T_coords, text_color, back_color=None):
+def draw_text(display_surface, text_to_display, font, T_coords, text_color, back_color=None, center=False):
     '''This function takes in some text, and displays it on the referenced surface'''
 
     text_surf, text_rect = helper_text_objects(
         text_to_display, font, text_color, back_color)
 
-    text_rect.topleft = T_coords
+    if not center:
+        text_rect.topleft = T_coords
+    else:
+        text_rect.center = T_coords
 
     display_surface.blit(text_surf, text_rect)
 
 
-def draw_tile_rect(coords, tile_color=None, tile_alpha=None):
+def draw_tile_rect(coords, tile_color=None, tile_alpha=None, mark=None):
 
     x, y = coords
 
@@ -561,6 +564,10 @@ def draw_tile_rect(coords, tile_color=None, tile_alpha=None):
     new_surface.fill(local_color)
 
     new_surface.set_alpha(local_alpha)  # setting opacity
+
+    if mark:
+        draw_text(new_surface, mark, font=constants.FONT_CURSOR_TEXT, T_coords=(
+            constants.CELL_WIDTH/2, constants.CELL_HEIGHT/2), text_color=constants.COLOR_BLACK, center=True)
 
     SURFACE_MAIN.blit(new_surface, (new_x, new_y))
 
@@ -861,6 +868,8 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
                     menu_close = True
                 if event.key == pygame.K_f:
                     menu_close = True
+                if event.key == pygame.K_c:
+                    menu_close = True
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -872,7 +881,11 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 
         # Draw rectangle at mouse position on top of game
         for (tile_x, tile_y) in valid_tiles:
-            draw_tile_rect(coords=(tile_x, tile_y))
+
+            if (tile_x, tile_y) == valid_tiles[-1]:
+                draw_tile_rect(coords=(tile_x, tile_y), mark="X")
+            else:
+                draw_tile_rect(coords=(tile_x, tile_y))
 
         if radius:
             area_effect = map_find_radius(valid_tiles[-1], radius)

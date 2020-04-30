@@ -282,9 +282,22 @@ class com_Item:
 class ai_Confuse:
     '''Once per turn, execute'''
 
+    def __init__(self, old_ai, num_turns):
+        self.old_ai = old_ai
+        self.num_turns = num_turns
+
     def take_turn(self):
-        self.owner.creature.move(libtcodpy.random_get_int(0, -1, 1),
-                                 libtcodpy.random_get_int(0, -1, 1))
+
+        if self.num_turns > 0:
+            self.owner.creature.move(libtcodpy.random_get_int(0, -1, 1),
+                                     libtcodpy.random_get_int(0, -1, 1))
+
+            self.num_turns -= 1
+
+        else:
+            self.owner.ai = self.old_ai
+
+            game_message("The creature has broken free!", constants.COLOR_RED)
 
 
 class ai_Chase:
@@ -656,7 +669,23 @@ def cast_fireball():
 
 
 def cast_confusion():
-    pass
+
+    # Select tile
+    point_selected = menu_tile_select()
+
+    # Get target
+    if point_selected:
+        tile_x, tile_y = point_selected
+        target = map_check_for_creatures(tile_x, tile_y)
+
+    # Temporarily confuse the target
+        if target:
+            oldai = target.ai
+            target.ai = ai_Confuse(old_ai=oldai, num_turns=5)
+            target.ai.owner = target
+
+            game_message("The creature's eyes glaze over",
+                         constants.COLOR_GREEN)
 
 
 ##############################################################################
@@ -993,6 +1022,9 @@ def game_handle_keys():
 
             if event.key == pygame.K_f:
                 cast_fireball()
+
+            if event.key == pygame.K_c:
+                cast_confusion()
 
     return "no-action"
 

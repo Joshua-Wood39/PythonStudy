@@ -490,18 +490,30 @@ def draw_text(display_surface, text_to_display, font, T_coords, text_color, back
     display_surface.blit(text_surf, text_rect)
 
 
-def draw_tile_rect(coords):
+def draw_tile_rect(coords, tile_color=None, tile_alpha=None):
 
     x, y = coords
+
+    # Default colors
+    if tile_color:
+        local_color = tile_color
+    else:
+        local_color = constants.COLOR_WHITE
+
+    # Default alpha
+    if tile_alpha:
+        local_alpha = tile_alpha
+    else:
+        local_alpha = 200
 
     new_x = x * constants.CELL_WIDTH
     new_y = y * constants.CELL_HEIGHT
 
     new_surface = pygame.Surface((constants.CELL_WIDTH, constants.CELL_HEIGHT))
 
-    new_surface.fill(constants.COLOR_WHITE)
+    new_surface.fill(local_color)
 
-    new_surface.set_alpha(200)  # setting opacity
+    new_surface.set_alpha(local_alpha)  # setting opacity
 
     SURFACE_MAIN.blit(new_surface, (new_x, new_y))
 
@@ -589,23 +601,24 @@ def cast_fireball():
     point_selected = menu_tile_select(
         coords_origin=player_location, max_range=max_r, penetrate_walls=False, pierce_creature=False, radius=local_radius)
 
-    # Get sequence of tiles
-    tiles_to_damage = map_find_radius(point_selected, local_radius)
+    if point_selected:
+        # Get sequence of tiles
+        tiles_to_damage = map_find_radius(point_selected, local_radius)
 
-    creature_hit = False
+        creature_hit = False
 
-    # Damage all creatures in tiles
-    for (x, y) in tiles_to_damage:
-        creatures_to_damage = map_check_for_creatures(x, y)
+        # Damage all creatures in tiles
+        for (x, y) in tiles_to_damage:
+            creatures_to_damage = map_check_for_creatures(x, y)
 
-        if creatures_to_damage:
-            creatures_to_damage.creature.take_damage(damage)
+            if creatures_to_damage:
+                creatures_to_damage.creature.take_damage(damage)
 
-            if creatures_to_damage is not PLAYER:
-                creature_hit = True
+                if creatures_to_damage is not PLAYER:
+                    creature_hit = True
 
-    if creature_hit:
-        game_message("The monster howls out in pain.", constants.COLOR_RED)
+        if creature_hit:
+            game_message("The monster howls out in pain.", constants.COLOR_RED)
 
 
 ##############################################################################
@@ -779,6 +792,8 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 
                 if event.key == pygame.K_l:
                     menu_close = True
+                if event.key == pygame.K_f:
+                    menu_close = True
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -790,13 +805,14 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 
         # Draw rectangle at mouse position on top of game
         for (tile_x, tile_y) in valid_tiles:
-            draw_tile_rect((tile_x, tile_y))
+            draw_tile_rect(coords=(tile_x, tile_y))
 
         if radius:
             area_effect = map_find_radius(valid_tiles[-1], radius)
 
             for (tile_x, tile_y) in area_effect:
-                draw_tile_rect((tile_x, tile_y))
+                draw_tile_rect(coords=(tile_x, tile_y),
+                               tile_color=constants.COLOR_RED, tile_alpha=150)
 
         # Update the display
         pygame.display.flip()

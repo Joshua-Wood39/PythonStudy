@@ -545,7 +545,7 @@ def cast_lightning(damage):
     player_location = (PLAYER.x, PLAYER.y)
     # Prompt player for a tile
     point_selected = menu_tile_select(
-        coords_origin=player_location, max_range=5)
+        coords_origin=player_location, max_range=5, penetrate_walls=False)
 
     # Convert that tile into a list of tiles between A --> B
     if point_selected:
@@ -557,7 +557,7 @@ def cast_lightning(damage):
 
             target = map_check_for_creatures(x, y)
 
-            if target and i != 0:
+            if target:
                 target.creature.take_damage(damage)
 
 
@@ -710,6 +710,9 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True):
             for i, (x, y) in enumerate(full_list_tiles):
                 valid_tiles.append((x, y))
                 if max_range and i == max_range - 1:
+                    break
+
+                if not penetrate_walls and GAME.current_map[x][y].block_path:
                     break
 
         else:

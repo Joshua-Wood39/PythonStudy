@@ -382,6 +382,22 @@ def map_find_line(coords1, coords2):
     return coord_list
 
 
+def map_find_radius(coords, radius):
+    center_x, center_y = coords
+
+    tile_list = []
+    start_x = (center_x - radius)
+    end_x = (center_x + radius + 1)
+    start_y = (center_y - radius)
+    end_y = (center_y + radius + 1)
+
+    for x in range(start_x, end_x):
+        for y in range(start_y, end_y):
+            tile_list.append((x, y))
+
+    return tile_list
+
+
 ##############################################################################
 # DRAW
 ##############################################################################
@@ -561,6 +577,37 @@ def cast_lightning(damage):
                 target.creature.take_damage(damage)
 
 
+def cast_fireball():
+
+    # defs
+    damage = 5
+    local_radius = 1
+    max_r = 4
+    player_location = (PLAYER.x, PLAYER.y)
+
+    # Get target tile
+    point_selected = menu_tile_select(
+        coords_origin=player_location, max_range=max_r, penetrate_walls=False, pierce_creature=False, radius=local_radius)
+
+    # Get sequence of tiles
+    tiles_to_damage = map_find_radius(point_selected, local_radius)
+
+    creature_hit = False
+
+    # Damage all creatures in tiles
+    for (x, y) in tiles_to_damage:
+        creatures_to_damage = map_check_for_creatures(x, y)
+
+        if creatures_to_damage:
+            creatures_to_damage.creature.take_damage(damage)
+
+            if creatures_to_damage is not PLAYER:
+                creature_hit = True
+
+    if creature_hit:
+        game_message("The monster howls out in pain.", constants.COLOR_RED)
+
+
 ##############################################################################
 # MENUS
 ##############################################################################
@@ -681,7 +728,7 @@ def menu_inventory():
         pygame.display.flip()
 
 
-def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True):
+def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, pierce_creature=True, radius=None):
     ''' This menu lets the player select a tile. 
     This function pauses the game, produces an on-screen rectangle
     and when the player presses the left mouse-button, will return
@@ -709,10 +756,17 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True):
 
             for i, (x, y) in enumerate(full_list_tiles):
                 valid_tiles.append((x, y))
+
+                # Stop at max range
                 if max_range and i == max_range - 1:
                     break
 
+                # Stop at wall
                 if not penetrate_walls and GAME.current_map[x][y].block_path:
+                    break
+
+                # Stop at creature
+                if not pierce_creature and map_check_for_creatures(x, y):
                     break
 
         else:
@@ -737,6 +791,12 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True):
         # Draw rectangle at mouse position on top of game
         for (tile_x, tile_y) in valid_tiles:
             draw_tile_rect((tile_x, tile_y))
+
+        if radius:
+            area_effect = map_find_radius(valid_tiles[-1], radius)
+
+            for (tile_x, tile_y) in area_effect:
+                draw_tile_rect((tile_x, tile_y))
 
         # Update the display
         pygame.display.flip()
@@ -876,6 +936,9 @@ def game_handle_keys():
             # key 'l' --> turn on tile selection
             if event.key == pygame.K_l:
                 cast_lightning(10)
+
+            if event.key == pygame.K_f:
+                cast_fireball()
 
     return "no-action"
 

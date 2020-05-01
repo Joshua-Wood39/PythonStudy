@@ -39,6 +39,8 @@ class struc_Assets:
         ## ITEMS ##
         self.S_SWORD = [pygame.transform.scale(
             pygame.image.load("assets/Sword.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
+        self.S_SHIELD = [pygame.transform.scale(pygame.image.load(
+            "assets/Shield.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
 
 
 ##############################################################################
@@ -89,6 +91,17 @@ class obj_Actor:
 
             self.item = com_Item()
             self.item.owner = self
+
+    @property  # Can call the method as a property
+    def display_name(self):
+        if self.creature:
+            return (self.creature.name_instance + " the " + self.name_object)
+
+        if self.item:
+            if self.equipment and self.equipment.equipped:
+                return (self.name_object + " (equipped)")
+            else:
+                return (self.name_object)
 
     def draw(self):
         is_visible = libtcodpy.map_is_in_fov(FOV_MAP, self.x, self.y)
@@ -199,8 +212,10 @@ class obj_Spritesheet:
 class com_Creature:
     '''Creatures have health, can damage other objects by attacking, and can die'''
 
-    def __init__(self, name_instance, hp=10, death_function=None):
+    def __init__(self, name_instance, base_atk=2, base_def=0, hp=10, death_function=None):
         self.name_instance = name_instance
+        self.base_atk = base_atk
+        self.base_def = base_def
         self.current_hp = hp
         self.max_hp = hp
         self.death_function = death_function
@@ -213,16 +228,18 @@ class com_Creature:
             self.owner.x + dx, self.owner.y + dy, self.owner)
 
         if target:
-            self.attack(target, 3)
+            self.attack(target)
 
         if not tile_is_wall:
             self.owner.x += dx
             self.owner.y += dy
 
-    def attack(self, target, damage):
+    def attack(self, target):
+        damage_dealt = self.power - target.creature.defense
+
         game_message(self.name_instance + " attacks " +
-                     target.creature.name_instance + " for " + str(damage) + " damage!", constants.COLOR_WHITE)
-        target.creature.take_damage(damage)
+                     target.creature.name_instance + " for " + str(damage_dealt) + " damage!", constants.COLOR_WHITE)
+        target.creature.take_damage(damage_dealt)
 
     def take_damage(self, damage):
         self.current_hp -= damage
@@ -239,6 +256,27 @@ class com_Creature:
         if self.current_hp > self.max_hp:
             self.current_hp = self.max_hp
 
+    @property
+    def power(self):
+
+        total_power = self.base_atk
+
+        if self.owner.container:
+            object_bonuses = [
+                obj.equipment.attack_bonus for obj in self.owner.container.equipped_items]
+
+            for bonus in object_bonuses:
+                total_power += bonus
+
+        return total_power
+
+    @property
+    def defense(self):
+
+        total_defense = self.base_def
+
+        return total_defense
+
 
 class com_Container:
     def __init__(self, volume=10.0, inventory=[]):
@@ -251,6 +289,14 @@ class com_Container:
     @property
     def volume(self):
         return 0.0
+
+    @property
+    def equipped_items(self):
+        list_of_equipped_items = [
+            obj for obj in self.inventory if obj.equipment and obj.equipment.equipped]
+
+        return list_of_equipped_items
+
     # TODO Get the weight of everything in inventory
 
 
@@ -349,7 +395,8 @@ class ai_Confuse:
         else:
             self.owner.ai = self.old_ai
 
-            game_message("The creature has broken free!", constants.COLOR_RED)
+            game_message(self.owner.display_name +
+                         " has broken free!", constants.COLOR_RED)
 
 
 class ai_Chase:
@@ -366,7 +413,7 @@ class ai_Chase:
 
             # TODO If close enough, attack player
             elif PLAYER.creature.current_hp > 0:
-                monster.creature.attack(PLAYER, 3)
+                monster.creature.attack(PLAYER)
 
 
 def death_monster(monster):
@@ -808,10 +855,10 @@ def menu_inventory():
         # Clear the menu
         local_inventory_surface.fill(constants.COLOR_BLACK)
 
-        # Register changes
+        # Collect list of item names
+        print_list = [obj.display_name for obj in PLAYER.container.inventory]
 
-        print_list = [obj.name_object for obj in PLAYER.container.inventory]
-
+        # Get list of input events
         events_list = pygame.event.get()
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
@@ -1019,7 +1066,7 @@ def game_initialize():
     ASSETS = struc_Assets()
 
     container_com1 = com_Container()
-    creature_com1 = com_Creature("greg")
+    creature_com1 = com_Creature("greg", base_atk=4)
     PLAYER = obj_Actor(1, 1, "python", ASSETS.A_PLAYER,
                        animation_speed=1, creature=creature_com1, container=container_com1)
 
@@ -1036,11 +1083,16 @@ def game_initialize():
                        creature=creature_com3, ai=ai_com2, item=item_com2)
 
     # Create a sword
-    equipment_com1 = com_Equipment()
+    equipment_com1 = com_Equipment(attack_bonus=2)
     SWORD = obj_Actor(2, 2, "Short Sword", ASSETS.S_SWORD,
                       equipment=equipment_com1)
 
-    GAME.current_objects = [PLAYER, ENEMY, ENEMY2, SWORD]
+    # Create a shield
+    equipment_com2 = com_Equipment(defense_bonus=1)
+    SHIELD = obj_Actor(2, 3, "Small Shield", ASSETS.S_SHIELD,
+                       equipment=equipment_com2)
+
+    GAME.current_objects = [PLAYER, ENEMY, ENEMY2, SWORD, SHIELD]
 
 
 def game_handle_keys():

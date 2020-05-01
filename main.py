@@ -36,6 +36,10 @@ class struc_Assets:
         self.S_FLOOREXPLORED = pygame.image.load("assets/FloorUnseen.png")
         self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
 
+        ## ITEMS ##
+        self.S_SWORD = [pygame.transform.scale(
+            pygame.image.load("assets/Sword.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
+
 
 ##############################################################################
 # OBJECTS
@@ -43,7 +47,15 @@ class struc_Assets:
 
 
 class obj_Actor:
-    def __init__(self, x, y, name_object, animation, animation_speed=.5, creature=None, ai=None, container=None, item=None):
+    def __init__(self, x, y,
+                 name_object,
+                 animation,
+                 animation_speed=.5,
+                 creature=None,
+                 ai=None,
+                 container=None,
+                 item=None,
+                 equipment=None):
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
@@ -69,6 +81,13 @@ class obj_Actor:
 
         self.item = item
         if self.item:
+            self.item.owner = self
+
+        self.equipment = equipment
+        if self.equipment:
+            self.equipment.owner = self
+
+            self.item = com_Item()
             self.item.owner = self
 
     def draw(self):
@@ -236,7 +255,9 @@ class com_Container:
 
 
 class com_Item:
-    def __init__(self, weight=0.0, volume=0.0, use_function=None, value=None):
+    def __init__(self, weight=0.0, volume=0.0,
+                 use_function=None,
+                 value=None):
         self.weight = weight
         self.volume = volume
         self.use_function = use_function
@@ -264,6 +285,10 @@ class com_Item:
 
     def use(self):
         '''Use the item by producing an effect and removing it'''
+        if self.owner.equipment:
+            self.owner.equipment.toggle_equip()
+            return
+
         if self.use_function:
             result = self.use_function(self.container.owner, self.value)
 
@@ -272,6 +297,33 @@ class com_Item:
 
             else:
                 self.container.inventory.remove(self.owner)
+
+
+class com_Equipment:
+    def __init__(self, attack_bonus=None, defense_bonus=None, slot=None):
+        self.attack_bonus = attack_bonus
+        self.defense_bonus = defense_bonus
+        self.slot = slot
+
+        self.equipped = False
+
+    def toggle_equip(self):
+        if self.equipped:
+            self.unequip()
+        else:
+            self.equip()
+
+    def equip(self):
+
+        # Toggle self.equipped
+        self.equipped = True
+        game_message("Item equipped")
+
+    def unequip(self):
+
+        # Toggle self.equipped
+        self.equipped = False
+        game_message("Item unequipped")
 
 
 ##############################################################################
@@ -806,6 +858,9 @@ def menu_inventory():
                           (0, 0 + (line * menu_text_height)),
                           menu_text_color)
 
+        # RENDER GAME #
+        draw_game()
+
         # Display Menu
         SURFACE_MAIN.blit(local_inventory_surface,
                           (menu_x, menu_y))
@@ -980,7 +1035,12 @@ def game_initialize():
     ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,
                        creature=creature_com3, ai=ai_com2, item=item_com2)
 
-    GAME.current_objects = [PLAYER, ENEMY, ENEMY2]
+    # Create a sword
+    equipment_com1 = com_Equipment()
+    SWORD = obj_Actor(2, 2, "Short Sword", ASSETS.S_SWORD,
+                      equipment=equipment_com1)
+
+    GAME.current_objects = [PLAYER, ENEMY, ENEMY2, SWORD]
 
 
 def game_handle_keys():

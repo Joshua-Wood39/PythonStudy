@@ -1,4 +1,3 @@
-# 3rd party modules
 import constants
 import pygame
 import tcod as libtcodpy
@@ -21,6 +20,7 @@ class struc_Assets:
         ## SPRITESHEETS ##
         self.charspritesheet = obj_Spritesheet("assets/Reptiles.png")
         self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
+        self.environmentsheet = obj_Spritesheet("assets/DungeonStarter.png")
 
         ## ANIMATIONS ##
         self.A_PLAYER = self.charspritesheet.get_animation(
@@ -32,8 +32,10 @@ class struc_Assets:
 
         ## SPRITES ##
         self.S_WALL = pygame.image.load("assets/Wall2.jpg")
-        self.S_FLOOR = pygame.image.load("assets/Floor.jpg")
-        self.S_FLOOREXPLORED = pygame.image.load("assets/FloorUnseen.png")
+        self.S_FLOOR = self.environmentsheet.get_image(
+            'a', 16, 16, 16, (32, 32))
+        self.S_FLOOREXPLORED = self.environmentsheet.get_image(
+            'a', 1, 16, 16, (32, 32))
         self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
 
         ## ITEMS ##
@@ -179,7 +181,7 @@ class obj_Spritesheet:
 
         image_list.append(image)
 
-        return image_list
+        return image_list[0]
 
     def get_animation(self, column, row, width=constants.CELL_WIDTH, height=constants.CELL_HEIGHT, num_sprites=1, scale=None):
         image_list = []
@@ -1020,6 +1022,11 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 
         # Tick the CLOCK
         CLOCK.tick(constants.GAME_FPS)
+
+
+##############################################################################
+# GENERATORS
+##############################################################################
 
 
 ##############################################################################

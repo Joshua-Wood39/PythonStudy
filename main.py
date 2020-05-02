@@ -230,7 +230,7 @@ class com_Creature:
         if target:
             self.attack(target)
 
-        if not tile_is_wall:
+        if not tile_is_wall and not target:
             self.owner.x += dx
             self.owner.y += dy
 
@@ -266,7 +266,8 @@ class com_Creature:
                 obj.equipment.attack_bonus for obj in self.owner.container.equipped_items]
 
             for bonus in object_bonuses:
-                total_power += bonus
+                if bonus:
+                    total_power += bonus
 
         return total_power
 
@@ -274,6 +275,14 @@ class com_Creature:
     def defense(self):
 
         total_defense = self.base_def
+
+        if self.owner.container:
+            object_bonuses = [
+                obj.equipment.defense_bonus for obj in self.owner.container.equipped_items]
+
+            for bonus in object_bonuses:
+                if bonus:
+                    total_defense += bonus
 
         return total_defense
 
@@ -320,7 +329,7 @@ class com_Item:
                 game_message("Picking up", constants.COLOR_GREEN)
                 actor.container.inventory.append(self.owner)
                 GAME.current_objects.remove(self.owner)
-                self.container = actor.container
+                self.current_container = actor.container
 
     def drop(self, new_x, new_y):
         GAME.current_objects.append(self.owner)
@@ -336,13 +345,14 @@ class com_Item:
             return
 
         if self.use_function:
-            result = self.use_function(self.container.owner, self.value)
+            result = self.use_function(
+                self.current_container.owner, self.value)
 
             if result is not None:
                 print("use_function failed")
 
             else:
-                self.container.inventory.remove(self.owner)
+                self.current_container.inventory.remove(self.owner)
 
 
 class com_Equipment:
@@ -361,7 +371,16 @@ class com_Equipment:
 
     def equip(self):
 
-        # Toggle self.equipped
+        # Check for equipment in slot
+
+        all_equipped_items = self.owner.item.current_container.equipped_items
+        if all_equipped_items:
+            for item in all_equipped_items:
+                if item.equipment.slot and item.equipment.slot == self.slot:
+                    game_message("Equipment slot is occupied",
+                                 constants.COLOR_RED)
+                    return
+
         self.equipped = True
         game_message("Item equipped")
 
@@ -1083,16 +1102,21 @@ def game_initialize():
                        creature=creature_com3, ai=ai_com2, item=item_com2)
 
     # Create a sword
-    equipment_com1 = com_Equipment(attack_bonus=2)
+    equipment_com1 = com_Equipment(attack_bonus=2, slot="hand_right")
     SWORD = obj_Actor(2, 2, "Short Sword", ASSETS.S_SWORD,
                       equipment=equipment_com1)
 
+    # Replica sword test
+    equipment_com3 = com_Equipment(attack_bonus=2, slot="hand_right")
+    SWORD2 = obj_Actor(3, 4, "Short Sword", ASSETS.S_SWORD,
+                       equipment=equipment_com3)
+
     # Create a shield
-    equipment_com2 = com_Equipment(defense_bonus=1)
+    equipment_com2 = com_Equipment(defense_bonus=1, slot="hand_left")
     SHIELD = obj_Actor(2, 3, "Small Shield", ASSETS.S_SHIELD,
                        equipment=equipment_com2)
 
-    GAME.current_objects = [PLAYER, ENEMY, ENEMY2, SWORD, SHIELD]
+    GAME.current_objects = [PLAYER, ENEMY, ENEMY2, SWORD, SHIELD, SWORD2]
 
 
 def game_handle_keys():

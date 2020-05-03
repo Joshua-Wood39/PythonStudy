@@ -38,18 +38,16 @@ class struc_Assets:
         self.S_FLOOREXPLORED = self.environmentsheet.get_image(
             'a', 1, 16, 16, (32, 32))[0]
         self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
+        self.S_SKULL = [pygame.image.load("assets/Skull.png")]
 
         ## ITEMS ##
         self.S_SWORD = [pygame.transform.scale(
             pygame.image.load("assets/Sword.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
         self.S_SHIELD = [pygame.transform.scale(pygame.image.load(
             "assets/Shield.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
-        self.S_SCROLL_01 = self.itemsheet.get_image(
-            'j', 17, 34, 34, (32, 32))[0]
-        self.S_SCROLL_02 = self.itemsheet.get_image(
-            'k', 17, 34, 34, (32, 32))[0]
-        self.S_SCROLL_03 = self.itemsheet.get_image(
-            'm', 17, 34, 34, (32, 32))[0]
+        self.S_SCROLL_01 = pygame.image.load("assets/Scroll.png")
+        self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
+        self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
 
 
 ##############################################################################
@@ -449,6 +447,8 @@ def death_monster(monster):
 
     game_message(monster.creature.name_instance +
                  " is dead!", constants.COLOR_GREY)
+
+    monster.animation = ASSETS.S_SKULL
     monster.creature = None
     monster.ai = None
 
@@ -1038,6 +1038,17 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 ##############################################################################
 
 
+# PLAYER
+def gen_player(coords):
+    x, y = coords
+    container_com = com_Container()
+    creature_com = com_Creature("Snicky", base_atk=4)
+    player = obj_Actor(x, y, "Python", ASSETS.A_PLAYER,
+                       animation_speed=1, creature=creature_com, container=container_com)
+    return player
+
+
+# ITEMS
 def gen_item(coords):
 
     random_num = libtcodpy.random_get_int(0, 1, 5)
@@ -1050,7 +1061,7 @@ def gen_item(coords):
         new_item = gen_scroll_confusion(coords)
     elif random_num == 4:
         new_item = gen_weapon_sword(coords)
-    elif new_item == 5:
+    elif random_num == 5:
         new_item = gen_armor_shield(coords)
 
     GAME.current_objects.append(new_item)
@@ -1123,12 +1134,56 @@ def gen_armor_shield(coords):
 
     bonus = libtcodpy.random_get_int(0, 1, 2)
 
-    equipment_com = com_Equipment(defense_bonus == bonus)
+    equipment_com = com_Equipment(defense_bonus=bonus)
 
     return_object = obj_Actor(
         x, y, "Small Shield", animation=ASSETS.S_SHIELD, equipment=equipment_com)
 
     return return_object
+
+
+# ENEMIES
+def gen_enemy(coords):
+    random_num = libtcodpy.random_get_int(0, 1, 100)
+
+    if random_num <= 15:
+        new_enemy = gen_aquatic_squid(coords)
+    else:
+        new_enemy = gen_aquatic_lobster(coords)
+
+    GAME.current_objects.append(new_enemy)
+
+
+def gen_aquatic_lobster(coords):
+
+    x, y = coords
+
+    max_health = libtcodpy.random_get_int(0, 5, 10)
+    base_attack = libtcodpy.random_get_int(0, 1, 3)
+
+    item_com = com_Item(use_function=cast_heal, value=4)
+    creature_com = com_Creature(
+        "Flippy", base_atk=base_attack, hp=max_health, death_function=death_monster)
+    ai_com = ai_Chase()
+    enemy = obj_Actor(x, y, "Rock Lobster", ASSETS.A_ENEMY1,
+                      animation_speed=1, creature=creature_com, ai=ai_com, item=item_com)
+    return enemy
+
+
+def gen_aquatic_squid(coords):
+
+    x, y = coords
+
+    max_health = libtcodpy.random_get_int(0, 12, 15)
+    base_attack = libtcodpy.random_get_int(0, 3, 6)
+
+    item_com = com_Item(use_function=cast_heal, value=5)
+    creature_com = com_Creature(
+        "Poots", base_atk=base_attack, hp=max_health, death_function=death_monster)
+    ai_com = ai_Chase()
+    enemy = obj_Actor(x, y, "Fugly Squid", ASSETS.A_ENEMY2, animation_speed=1,
+                      creature=creature_com, ai=ai_com, item=item_com)
+    return enemy
 
 
 ##############################################################################
@@ -1193,30 +1248,18 @@ def game_initialize():
 
     ASSETS = struc_Assets()
 
-    container_com1 = com_Container()
-    creature_com1 = com_Creature("greg", base_atk=4)
-    PLAYER = obj_Actor(1, 1, "python", ASSETS.A_PLAYER,
-                       animation_speed=1, creature=creature_com1, container=container_com1)
-
-    item_com1 = com_Item(use_function=cast_heal, value=4)
-    creature_com2 = com_Creature("jackie", death_function=death_monster)
-    ai_com1 = ai_Chase()
-    ENEMY = obj_Actor(10, 13, "rock lobster", ASSETS.A_ENEMY1, animation_speed=1,
-                      creature=creature_com2, ai=ai_com1, item=item_com1)
-
-    item_com2 = com_Item(use_function=cast_heal, value=5)
-    creature_com3 = com_Creature("bob", death_function=death_monster)
-    ai_com2 = ai_Chase()
-    ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,
-                       creature=creature_com3, ai=ai_com2, item=item_com2)
-
-    GAME.current_objects = [PLAYER, ENEMY,
-                            ENEMY2]
-
     # Create items
     gen_item((2, 2))
     gen_item((2, 3))
     gen_item((2, 4))
+
+    # Create 2 enemies
+    gen_enemy((15, 15))
+    gen_enemy((15, 18))
+
+    PLAYER = gen_player((1, 1))
+
+    GAME.current_objects.append(PLAYER)
 
 
 def game_handle_keys():

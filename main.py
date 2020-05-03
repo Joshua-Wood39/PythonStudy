@@ -21,7 +21,7 @@ class struc_Assets:
         self.charspritesheet = obj_Spritesheet("assets/Reptiles.png")
         self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
         self.environmentsheet = obj_Spritesheet("assets/DungeonStarter.png")
-        self.itemsheet = obj_Spritesheet("assets/ItemSheet.jpg")
+        self.itemsheet = obj_Spritesheet("assets/pngguru.com.png")
 
         ## ANIMATIONS ##
         self.A_PLAYER = self.charspritesheet.get_animation(
@@ -45,11 +45,11 @@ class struc_Assets:
         self.S_SHIELD = [pygame.transform.scale(pygame.image.load(
             "assets/Shield.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
         self.S_SCROLL_01 = self.itemsheet.get_image(
-            'l', 10, 19.25, 19.25, (32, 32))[0]
+            'j', 17, 34, 34, (32, 32))[0]
         self.S_SCROLL_02 = self.itemsheet.get_image(
-            'n', 11, 19.25, 19.25, (32, 32))[0]
+            'k', 17, 34, 34, (32, 32))[0]
         self.S_SCROLL_03 = self.itemsheet.get_image(
-            'o', 11, 19.25, 19.25, (32, 32))[0]
+            'm', 17, 34, 34, (32, 32))[0]
 
 
 ##############################################################################
@@ -749,11 +749,11 @@ def cast_heal(target, value):
     return None
 
 
-def cast_lightning(T_damage_maxrange):
+def cast_lightning(caster, T_damage_maxrange):
 
     damage, m_range = T_damage_maxrange
 
-    player_location = (PLAYER.x, PLAYER.y)
+    player_location = (caster.x, caster.y)
     # Prompt player for a tile
     point_selected = menu_tile_select(
         coords_origin=player_location, max_range=m_range, penetrate_walls=False)
@@ -772,12 +772,12 @@ def cast_lightning(T_damage_maxrange):
                 target.creature.take_damage(damage)
 
 
-def cast_fireball(T_damage_radius_range):
+def cast_fireball(caster, T_damage_radius_range):
 
     # defs
     damage, local_radius, max_r = T_damage_radius_range
 
-    player_location = (PLAYER.x, PLAYER.y)
+    player_location = (caster.x, caster.y)
 
     # Get target tile
     point_selected = menu_tile_select(
@@ -803,7 +803,7 @@ def cast_fireball(T_damage_radius_range):
             game_message("The monster howls out in pain.", constants.COLOR_RED)
 
 
-def cast_confusion(effect_length):
+def cast_confusion(caster, effect_length):
 
     # Select tile
     point_selected = menu_tile_select()
@@ -915,6 +915,7 @@ def menu_inventory():
                             mouse_line_selection <= len(print_list) - 1):
                         PLAYER.container.inventory[mouse_line_selection].item.use(
                         )
+                        menu_close = True
 
         # Draw the list
 
@@ -1037,7 +1038,25 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 ##############################################################################
 
 
-def gen_lightning_scroll(coords):
+def gen_item(coords):
+
+    random_num = libtcodpy.random_get_int(0, 1, 5)
+
+    if random_num == 1:
+        new_item = gen_scroll_lightning(coords)
+    elif random_num == 2:
+        new_item = gen_scroll_fireball(coords)
+    elif random_num == 3:
+        new_item = gen_scroll_confusion(coords)
+    elif random_num == 4:
+        new_item = gen_weapon_sword(coords)
+    elif new_item == 5:
+        new_item = gen_armor_shield(coords)
+
+    GAME.current_objects.append(new_item)
+
+
+def gen_scroll_lightning(coords):
 
     x, y = coords
 
@@ -1052,22 +1071,7 @@ def gen_lightning_scroll(coords):
     return return_object
 
 
-def gen_fireball_scroll(coords):
-
-    x, y = coords
-
-    effect_length = libtcodpy.random_get_int(0, 5, 10)
-
-    item_com = com_Item(use_function=cast_confusion,
-                        value=effect_length)
-
-    return_object = obj_Actor(x, y, "confusion scroll",
-                              animation=[ASSETS.S_SCROLL_02], item=item_com)
-
-    return return_object
-
-
-def gen_confusion_scroll(coords):
+def gen_scroll_fireball(coords):
 
     x, y = coords
 
@@ -1079,7 +1083,50 @@ def gen_confusion_scroll(coords):
                         value=(damage, radius, m_range))
 
     return_object = obj_Actor(x, y, "fireball scroll",
+                              animation=[ASSETS.S_SCROLL_02], item=item_com)
+
+    return return_object
+
+
+def gen_scroll_confusion(coords):
+
+    x, y = coords
+
+    effect_length = libtcodpy.random_get_int(0, 5, 10)
+
+    item_com = com_Item(use_function=cast_confusion,
+                        value=effect_length)
+
+    return_object = obj_Actor(x, y, "confusion scroll",
                               animation=[ASSETS.S_SCROLL_03], item=item_com)
+
+    return return_object
+
+
+def gen_weapon_sword(coords):
+
+    x, y = coords
+
+    bonus = libtcodpy.random_get_int(0, 1, 2)
+
+    equipment_com = com_Equipment(attack_bonus=bonus)
+
+    return_object = obj_Actor(
+        x, y, "Short Sword", animation=ASSETS.S_SWORD, equipment=equipment_com)
+
+    return return_object
+
+
+def gen_armor_shield(coords):
+
+    x, y = coords
+
+    bonus = libtcodpy.random_get_int(0, 1, 2)
+
+    equipment_com = com_Equipment(defense_bonus == bonus)
+
+    return_object = obj_Actor(
+        x, y, "Small Shield", animation=ASSETS.S_SHIELD, equipment=equipment_com)
 
     return return_object
 
@@ -1163,13 +1210,13 @@ def game_initialize():
     ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,
                        creature=creature_com3, ai=ai_com2, item=item_com2)
 
-    # Create scrolls
-    SCROLL_1 = gen_lightning_scroll((2, 2))
-    SCROLL_2 = gen_fireball_scroll((2, 3))
-    SCROLL_3 = gen_confusion_scroll((2, 4))
-
     GAME.current_objects = [PLAYER, ENEMY,
-                            ENEMY2, SCROLL_1, SCROLL_2, SCROLL_3]
+                            ENEMY2]
+
+    # Create items
+    gen_item((2, 2))
+    gen_item((2, 3))
+    gen_item((2, 4))
 
 
 def game_handle_keys():

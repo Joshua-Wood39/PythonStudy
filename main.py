@@ -21,6 +21,7 @@ class struc_Assets:
         self.charspritesheet = obj_Spritesheet("assets/Reptiles.png")
         self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
         self.environmentsheet = obj_Spritesheet("assets/DungeonStarter.png")
+        self.itemsheet = obj_Spritesheet("assets/ItemSheet.jpg")
 
         ## ANIMATIONS ##
         self.A_PLAYER = self.charspritesheet.get_animation(
@@ -33,9 +34,9 @@ class struc_Assets:
         ## SPRITES ##
         self.S_WALL = pygame.image.load("assets/Wall2.jpg")
         self.S_FLOOR = self.environmentsheet.get_image(
-            'a', 16, 16, 16, (32, 32))
+            'a', 16, 16, 16, (32, 32))[0]
         self.S_FLOOREXPLORED = self.environmentsheet.get_image(
-            'a', 1, 16, 16, (32, 32))
+            'a', 1, 16, 16, (32, 32))[0]
         self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
 
         ## ITEMS ##
@@ -43,6 +44,12 @@ class struc_Assets:
             pygame.image.load("assets/Sword.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
         self.S_SHIELD = [pygame.transform.scale(pygame.image.load(
             "assets/Shield.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
+        self.S_SCROLL_01 = self.itemsheet.get_image(
+            'l', 10, 19.25, 19.25, (32, 32))[0]
+        self.S_SCROLL_02 = self.itemsheet.get_image(
+            'n', 11, 19.25, 19.25, (32, 32))[0]
+        self.S_SCROLL_03 = self.itemsheet.get_image(
+            'o', 11, 19.25, 19.25, (32, 32))[0]
 
 
 ##############################################################################
@@ -181,7 +188,7 @@ class obj_Spritesheet:
 
         image_list.append(image)
 
-        return image_list[0]
+        return image_list
 
     def get_animation(self, column, row, width=constants.CELL_WIDTH, height=constants.CELL_HEIGHT, num_sprites=1, scale=None):
         image_list = []
@@ -742,12 +749,14 @@ def cast_heal(target, value):
     return None
 
 
-def cast_lightning(damage):
+def cast_lightning(T_damage_maxrange):
+
+    damage, m_range = T_damage_maxrange
 
     player_location = (PLAYER.x, PLAYER.y)
     # Prompt player for a tile
     point_selected = menu_tile_select(
-        coords_origin=player_location, max_range=5, penetrate_walls=False)
+        coords_origin=player_location, max_range=m_range, penetrate_walls=False)
 
     # Convert that tile into a list of tiles between A --> B
     if point_selected:
@@ -763,12 +772,11 @@ def cast_lightning(damage):
                 target.creature.take_damage(damage)
 
 
-def cast_fireball():
+def cast_fireball(T_damage_radius_range):
 
     # defs
-    damage = 5
-    local_radius = 1
-    max_r = 4
+    damage, local_radius, max_r = T_damage_radius_range
+
     player_location = (PLAYER.x, PLAYER.y)
 
     # Get target tile
@@ -795,7 +803,7 @@ def cast_fireball():
             game_message("The monster howls out in pain.", constants.COLOR_RED)
 
 
-def cast_confusion():
+def cast_confusion(effect_length):
 
     # Select tile
     point_selected = menu_tile_select()
@@ -808,7 +816,7 @@ def cast_confusion():
     # Temporarily confuse the target
         if target:
             oldai = target.ai
-            target.ai = ai_Confuse(old_ai=oldai, num_turns=5)
+            target.ai = ai_Confuse(old_ai=oldai, num_turns=effect_length)
             target.ai.owner = target
 
             game_message("The creature's eyes glaze over",
@@ -1029,6 +1037,53 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 ##############################################################################
 
 
+def gen_lightning_scroll(coords):
+
+    x, y = coords
+
+    damage = libtcodpy.random_get_int(0, 5, 7)
+    m_range = libtcodpy.random_get_int(0, 7, 8)
+
+    item_com = com_Item(use_function=cast_lightning, value=(damage, m_range))
+
+    return_object = obj_Actor(x, y, "lightning scroll",
+                              animation=[ASSETS.S_SCROLL_01], item=item_com)
+
+    return return_object
+
+
+def gen_fireball_scroll(coords):
+
+    x, y = coords
+
+    effect_length = libtcodpy.random_get_int(0, 5, 10)
+
+    item_com = com_Item(use_function=cast_confusion,
+                        value=effect_length)
+
+    return_object = obj_Actor(x, y, "confusion scroll",
+                              animation=[ASSETS.S_SCROLL_02], item=item_com)
+
+    return return_object
+
+
+def gen_confusion_scroll(coords):
+
+    x, y = coords
+
+    damage = libtcodpy.random_get_int(0, 2, 4)
+    radius = 1
+    m_range = libtcodpy.random_get_int(0, 9, 12)
+
+    item_com = com_Item(use_function=cast_fireball,
+                        value=(damage, radius, m_range))
+
+    return_object = obj_Actor(x, y, "fireball scroll",
+                              animation=[ASSETS.S_SCROLL_03], item=item_com)
+
+    return return_object
+
+
 ##############################################################################
 # GAME
 ##############################################################################
@@ -1108,22 +1163,13 @@ def game_initialize():
     ENEMY2 = obj_Actor(10, 18, "ugly squid", ASSETS.A_ENEMY2, animation_speed=1,
                        creature=creature_com3, ai=ai_com2, item=item_com2)
 
-    # Create a sword
-    equipment_com1 = com_Equipment(attack_bonus=2, slot="hand_right")
-    SWORD = obj_Actor(2, 2, "Short Sword", ASSETS.S_SWORD,
-                      equipment=equipment_com1)
+    # Create scrolls
+    SCROLL_1 = gen_lightning_scroll((2, 2))
+    SCROLL_2 = gen_fireball_scroll((2, 3))
+    SCROLL_3 = gen_confusion_scroll((2, 4))
 
-    # Replica sword test
-    equipment_com3 = com_Equipment(attack_bonus=2, slot="hand_right")
-    SWORD2 = obj_Actor(3, 4, "Short Sword", ASSETS.S_SWORD,
-                       equipment=equipment_com3)
-
-    # Create a shield
-    equipment_com2 = com_Equipment(defense_bonus=1, slot="hand_left")
-    SHIELD = obj_Actor(2, 3, "Small Shield", ASSETS.S_SHIELD,
-                       equipment=equipment_com2)
-
-    GAME.current_objects = [PLAYER, ENEMY, ENEMY2, SWORD, SHIELD, SWORD2]
+    GAME.current_objects = [PLAYER, ENEMY,
+                            ENEMY2, SCROLL_1, SCROLL_2, SCROLL_3]
 
 
 def game_handle_keys():

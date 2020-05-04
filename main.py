@@ -1229,7 +1229,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ENEMY, ENEMY2, ASSETS
+    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ASSETS
     # initialize pygame
     pygame.init()
 

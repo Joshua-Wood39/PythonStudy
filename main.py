@@ -229,7 +229,7 @@ class obj_Room:
 
         return (center_x, center_y)
 
-    def intercepts(self, other):
+    def intersect(self, other):
         # Return true if other object intercepts this one
         objects_intersect = (self.x1 <= other.x2 and self.x2 >=
                              other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1)
@@ -487,17 +487,56 @@ def map_create():
     new_map = [[struc_Tile(True) for y in range(0, constants.MAP_HEIGHT)]
                for x in range(0, constants.MAP_WIDTH)]
 
-    # TODO Generate new room
+    # Generate new room
+    list_of_rooms = []
 
-    # TODO Check if new room intercepts another room
+    for i in range(constants.MAP_MAX_NUM_ROOMS):
 
-    # TODO Place the room
+        w = libtcodpy.random_get_int(
+            0, constants.ROOM_MIN_WIDTH, constants.ROOM_MAX_WIDTH)
+        h = libtcodpy.random_get_int(
+            0, constants.ROOM_MIN_HEIGHT, constants.ROOM_MAX_HEIGHT)
 
-    # TODO Dig the tunnels
+        x = libtcodpy.random_get_int(0, 2, constants.MAP_WIDTH - w - 2)
+        y = libtcodpy.random_get_int(0, 2, constants.MAP_HEIGHT - h - 2)
+
+        # Create the room
+        new_room = obj_Room((x, y), (w, h))
+
+        failed = False
+
+        # Check for intersect
+        for other_room in list_of_rooms:
+            if new_room.intersect(other_room):
+                failed = True
+                break
+
+        if not failed:
+            # Place the room
+            map_create_room(new_map, new_room)
+            current_center = new_room.center
+
+            if len(list_of_rooms) == 0:
+                gen_player(current_center)
+
+            else:
+                previous_center = list_of_rooms[-1].center
+
+                coin_flip = (libtcodpy.random_get_int(0, 0, 1) == 1)
+
+                if coin_flip:
+                    map_create_xtunnel()
 
     map_make_fov(new_map)
 
     return new_map
+
+
+def map_create_room(new_map, new_room):
+
+    for x in range(new_room.x1, new_room.x2):
+        for y in range(new_room.y1, new_room.y2):
+            new_map[x][y].block_path = False
 
 
 def map_check_for_creatures(x, y, exclude_object=None):

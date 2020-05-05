@@ -154,8 +154,6 @@ class obj_Actor:
 
 class obj_Game:
     def __init__(self):
-
-        self.current_map = map_create()
         self.current_objects = []
 
         self.message_history = []
@@ -486,7 +484,7 @@ def map_create():
     # Generate a map full of walls
     new_map = [[struc_Tile(True) for y in range(0, constants.MAP_HEIGHT)]
                for x in range(0, constants.MAP_WIDTH)]
-
+    global PLAYER
     # Generate new room
     list_of_rooms = []
 
@@ -517,15 +515,15 @@ def map_create():
             current_center = new_room.center
 
             if len(list_of_rooms) == 0:
-                gen_player(current_center)
+                PLAYER = gen_player(current_center)
 
             else:
                 previous_center = list_of_rooms[-1].center
 
-                coin_flip = (libtcodpy.random_get_int(0, 0, 1) == 1)
+                # Dig the tunnels
+                map_create_tunnels(current_center, previous_center, new_map)
 
-                if coin_flip:
-                    map_create_xtunnel()
+            list_of_rooms.append(new_room)
 
     map_make_fov(new_map)
 
@@ -537,6 +535,24 @@ def map_create_room(new_map, new_room):
     for x in range(new_room.x1, new_room.x2):
         for y in range(new_room.y1, new_room.y2):
             new_map[x][y].block_path = False
+
+
+def map_create_tunnels(coords1, coords2, new_map):
+    x1, y1 = coords1
+    x2, y2 = coords2
+
+    coin_flip = (libtcodpy.random_get_int(0, 0, 1) == 1)
+
+    if coin_flip:
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            new_map[x][y1].block_path = False
+        for y in range(min(y1, y2), max(y1, y2) + 1):
+            new_map[x2][y].block_path = False
+    else:
+        for y in range(min(y1, y2), max(y1, y2) + 1):
+            new_map[x1][y].block_path = False
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            new_map[x][y2].block_path = False
 
 
 def map_check_for_creatures(x, y, exclude_object=None):
@@ -1290,7 +1306,7 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, PLAYER, ASSETS
+    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, ASSETS
     # initialize pygame
     pygame.init()
 
@@ -1301,26 +1317,15 @@ def game_initialize():
     SURFACE_MAIN = pygame.display.set_mode(
         (constants.MAP_WIDTH * constants.CELL_WIDTH, constants.MAP_HEIGHT * constants.CELL_HEIGHT))
 
+    ASSETS = struc_Assets()
+
     GAME = obj_Game()
+
+    GAME.current_map = map_create()
 
     CLOCK = pygame.time.Clock()
 
     FOV_CALCULATE = True
-
-    ASSETS = struc_Assets()
-
-    # Create items
-    gen_item((2, 2))
-    gen_item((2, 3))
-    gen_item((2, 4))
-
-    # Create 2 enemies
-    gen_enemy((15, 15))
-    gen_enemy((15, 18))
-
-    PLAYER = gen_player((1, 1))
-
-    GAME.current_objects.append(PLAYER)
 
 
 def game_handle_keys():

@@ -5,8 +5,8 @@ pygame.font.init()
 
 
 # Game Sizes
-GAME_WIDTH = 800
-GAME_HEIGHT = 600
+CAMERA_WIDTH = 800
+CAMERA_HEIGHT = 600
 CELL_WIDTH = 32
 CELL_HEIGHT = 32
 
@@ -14,8 +14,8 @@ CELL_HEIGHT = 32
 GAME_FPS = 60
 
 # Map Limitations
-MAP_WIDTH = 30
-MAP_HEIGHT = 30
+MAP_WIDTH = 100
+MAP_HEIGHT = 100
 MAP_MAX_NUM_ROOMS = 10
 
 # Room Limitations

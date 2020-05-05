@@ -115,7 +115,7 @@ class obj_Actor:
 
         if is_visible:
             if len(self.animation) == 1:
-                SURFACE_MAIN.blit(
+                SURFACE_MAP.blit(
                     self.animation[0], (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
             elif len(self.animation) > 1:
@@ -131,7 +131,7 @@ class obj_Actor:
                     else:
                         self.sprite_image += 1
 
-                SURFACE_MAIN.blit(
+                SURFACE_MAP.blit(
                     self.animation[self.sprite_image], (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
     def distance_to(self, other):
@@ -232,6 +232,25 @@ class obj_Room:
         objects_intersect = (self.x1 <= other.x2 and self.x2 >=
                              other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1)
         return objects_intersect
+
+
+class obj_Camera:
+
+    def __init__(self):
+        self.width = constants.CAMERA_WIDTH
+        self.height = constants.CAMERA_HEIGHT
+        self.x, self.y = (0, 0)
+
+    def update(self):
+        self.x = PLAYER.x * constants.CELL_WIDTH + (constants.CELL_WIDTH/2)
+        self.y = PLAYER.y * constants.CELL_HEIGHT + (constants.CELL_HEIGHT/2)
+
+    @property
+    def rectangle(self):
+        pos_rect = pygame.Rect(
+            (0, 0), (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
+        pos_rect.center = (self.x, self.y)
+        return pos_rect
 
 ##############################################################################
 # COMPONENTS
@@ -675,19 +694,24 @@ def draw_game():
 
     # clear the surface
     SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
+    SURFACE_MAP.fill(constants.COLOR_DEFAULT_BG)
+
+    CAMERA.update()
+
+    displayrectangle = pygame.Rect(
+        (0, 0), (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
 
     # draw the map
     draw_map(GAME.current_map)
 
-    # draw all objects
+    # draw all objects ---removed key=lambda obj: obj.depth
     for obj in GAME.current_objects:
         obj.draw()
 
+    SURFACE_MAIN.blit(SURFACE_MAP, (0, 0), CAMERA.rectangle)
+
     draw_debug()
     draw_messages()
-
-    # update the display
-    # pygame.display.flip()
 
 
 def draw_map(map_to_draw):
@@ -702,20 +726,20 @@ def draw_map(map_to_draw):
 
                 if map_to_draw[x][y].block_path == True:
                     # draw wall
-                    SURFACE_MAIN.blit(
+                    SURFACE_MAP.blit(
                         ASSETS.S_WALL, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
                 else:
                     # draw floor
-                    SURFACE_MAIN.blit(
+                    SURFACE_MAP.blit(
                         ASSETS.S_FLOOR, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
 
             elif map_to_draw[x][y].explored:
 
                 if map_to_draw[x][y].block_path == True:
-                    SURFACE_MAIN.blit(
+                    SURFACE_MAP.blit(
                         ASSETS.S_WALLEXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
                 else:
-                    SURFACE_MAIN.blit(
+                    SURFACE_MAP.blit(
                         ASSETS.S_FLOOREXPLORED, (x * constants.CELL_WIDTH, y * constants.CELL_HEIGHT))
 
 
@@ -733,7 +757,7 @@ def draw_messages():
 
     text_height = helper_text_height(constants.FONT_MESSAGE_TEXT)
 
-    start_y = (constants.MAP_HEIGHT * constants.CELL_HEIGHT -
+    start_y = (constants.CAMERA_HEIGHT -
                (constants.NUM_MESSAGES * text_height)) - 5
 
     i = 0
@@ -789,7 +813,7 @@ def draw_tile_rect(coords, tile_color=None, tile_alpha=None, mark=None):
         draw_text(new_surface, mark, font=constants.FONT_CURSOR_TEXT, T_coords=(
             constants.CELL_WIDTH/2, constants.CELL_HEIGHT/2), text_color=constants.COLOR_BLACK, center=True)
 
-    SURFACE_MAIN.blit(new_surface, (new_x, new_y))
+    SURFACE_MAP.blit(new_surface, (new_x, new_y))
 
 
 ##############################################################################
@@ -1322,7 +1346,8 @@ def game_main_loop():
 def game_initialize():
     '''This function initializes the main window, and pygame'''
 
-    global SURFACE_MAIN, GAME, CLOCK, FOV_CALCULATE, ASSETS
+    global SURFACE_MAIN, SURFACE_MAP
+    global GAME, CLOCK, FOV_CALCULATE, ASSETS, CAMERA
     # initialize pygame
     pygame.init()
 
@@ -1331,7 +1356,12 @@ def game_initialize():
     pygame.font.init()
 
     SURFACE_MAIN = pygame.display.set_mode(
+        (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
+
+    SURFACE_MAP = pygame.Surface(
         (constants.MAP_WIDTH * constants.CELL_WIDTH, constants.MAP_HEIGHT * constants.CELL_HEIGHT))
+
+    CAMERA = obj_Camera()
 
     ASSETS = struc_Assets()
 

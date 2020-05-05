@@ -211,6 +211,30 @@ class obj_Spritesheet:
         return image_list
 
 
+class obj_Room:
+    ''' This is a rectangle that lives on the map '''
+
+    def __init__(self, coords, size):
+
+        self.x1, self.y1 = coords
+        self.w, self.h = size
+
+        self.x2 = self.x1 + self.w
+        self.y2 = self.y1 + self.h
+
+    @property
+    def center(self):
+        center_x = math.floor((self.x1 + self.x2) / 2)
+        center_y = math.floor((self.y1 + self.y2) / 2)
+
+        return (center_x, center_y)
+
+    def intercepts(self, other):
+        # Return true if other object intercepts this one
+        objects_intersect = (self.x1 <= other.x2 and self.x2 >=
+                             other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1)
+        return objects_intersect
+
 ##############################################################################
 # COMPONENTS
 ##############################################################################
@@ -459,19 +483,17 @@ def death_monster(monster):
 
 
 def map_create():
-    new_map = [[struc_Tile(False) for y in range(0, constants.MAP_HEIGHT)]
+    # Generate a map full of walls
+    new_map = [[struc_Tile(True) for y in range(0, constants.MAP_HEIGHT)]
                for x in range(0, constants.MAP_WIDTH)]
 
-    new_map[10][10].block_path = True
-    new_map[10][15].block_path = True
+    # TODO Generate new room
 
-    for x in range(constants.MAP_WIDTH):
-        new_map[x][0].block_path = True
-        new_map[x][constants.MAP_HEIGHT - 1].block_path = True
+    # TODO Check if new room intercepts another room
 
-    for y in range(constants.MAP_HEIGHT):
-        new_map[0][y].block_path = True
-        new_map[constants.MAP_WIDTH - 1][y].block_path = True
+    # TODO Place the room
+
+    # TODO Dig the tunnels
 
     map_make_fov(new_map)
 

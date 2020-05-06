@@ -242,8 +242,15 @@ class obj_Camera:
         self.x, self.y = (0, 0)
 
     def update(self):
-        self.x = PLAYER.x * constants.CELL_WIDTH + (constants.CELL_WIDTH/2)
-        self.y = PLAYER.y * constants.CELL_HEIGHT + (constants.CELL_HEIGHT/2)
+
+        target_x = PLAYER.x * constants.CELL_WIDTH + (constants.CELL_WIDTH/2)
+        target_y = PLAYER.y * constants.CELL_HEIGHT + (constants.CELL_HEIGHT/2)
+
+        distance_x = target_x - self.x
+        distance_y = target_y - self.y
+
+        self.x += int(distance_x)
+        self.y += int(distance_y)
 
     @property
     def rectangle(self):

@@ -753,8 +753,28 @@ def draw_game():
 
 
 def draw_map(map_to_draw):
-    for x in range(0, constants.MAP_WIDTH):
-        for y in range(0, constants.MAP_HEIGHT):
+
+    cam_x, cam_y = CAMERA.map_address
+    display_map_w = constants.CAMERA_WIDTH / constants.CELL_WIDTH
+    display_map_h = constants.CAMERA_HEIGHT / constants.CELL_HEIGHT
+
+    render_w_min = math.floor(cam_x - (display_map_w / 2))
+    render_h_min = math.floor(cam_y - (display_map_h / 2))
+    render_w_max = math.floor(cam_x + (display_map_w / 2))
+    render_h_max = math.floor(cam_y + (display_map_h / 2))
+
+    if render_w_min < 0:
+        render_w_min = 0
+    if render_h_min < 0:
+        render_h_min = 0
+
+    if render_w_max > constants.MAP_WIDTH:
+        render_w_max = constants.MAP_WIDTH
+    if render_h_max > constants.MAP_HEIGHT:
+        render_h_max = constants.MAP_HEIGHT
+
+    for x in range(render_w_min, render_w_max):
+        for y in range(render_h_min, render_h_max):
 
             is_visible = libtcodpy.map_is_in_fov(FOV_MAP, x, y)
 

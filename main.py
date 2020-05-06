@@ -246,11 +246,37 @@ class obj_Camera:
         target_x = PLAYER.x * constants.CELL_WIDTH + (constants.CELL_WIDTH/2)
         target_y = PLAYER.y * constants.CELL_HEIGHT + (constants.CELL_HEIGHT/2)
 
-        distance_x = target_x - self.x
-        distance_y = target_y - self.y
+        distance_x, distance_y = self.map_dist((target_x, target_y))
 
         self.x += int(distance_x)
         self.y += int(distance_y)
+
+    def win_to_map(self, coords):
+        tar_x, tar_y = coords
+        # Convert window coords to distance from camera
+        cam_d_x, cam_d_y = self.cam_dist((tar_x, tar_y))
+
+        # Distance from camera --> map coord
+        map_p_x = self.x + cam_d_x
+        map_p_y = self.y + cam_d_y
+
+        return (map_p_x, map_p_y)
+
+    def map_dist(self, coords):
+        new_x, new_y = coords
+
+        dist_x = new_x - self.x
+        dist_y = new_y - self.y
+
+        return (dist_x, dist_y)
+
+    def cam_dist(self, coords):
+        win_x, win_y = coords
+
+        dist_x = win_x - (self.width / 2)
+        dist_y = win_y - (self.height / 2)
+
+        return (dist_x, dist_y)
 
     @property
     def rectangle(self):
@@ -258,6 +284,14 @@ class obj_Camera:
             (0, 0), (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
         pos_rect.center = (self.x, self.y)
         return pos_rect
+
+    @property
+    def map_address(self):
+        map_x = self.x / constants.CELL_WIDTH
+        map_y = self.y / constants.CELL_HEIGHT
+
+        return (map_x, map_y)
+
 
 ##############################################################################
 # COMPONENTS
@@ -705,9 +739,6 @@ def draw_game():
 
     CAMERA.update()
 
-    displayrectangle = pygame.Rect(
-        (0, 0), (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
-
     # draw the map
     draw_map(GAME.current_map)
 
@@ -901,11 +932,11 @@ def cast_fireball(caster, T_damage_radius_range):
     # defs
     damage, local_radius, max_r = T_damage_radius_range
 
-    player_location = (caster.x, caster.y)
+    caster_location = (caster.x, caster.y)
 
     # Get target tile
     point_selected = menu_tile_select(
-        coords_origin=player_location, max_range=max_r, penetrate_walls=False, pierce_creature=False, radius=local_radius)
+        coords_origin=caster_location, max_range=max_r, penetrate_walls=False, pierce_creature=False, radius=local_radius)
 
     if point_selected:
         # Get sequence of tiles
@@ -1088,8 +1119,10 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
         events_list = pygame.event.get()
 
         # Mouse map selection
-        map_coord_x = math.floor(mouse_x/constants.CELL_WIDTH)
-        map_coord_y = math.floor(mouse_y/constants.CELL_HEIGHT)
+        mapx_pixel, mapy_pixel = CAMERA.win_to_map((mouse_x, mouse_y))
+
+        map_coord_x = math.floor(mapx_pixel/constants.CELL_WIDTH)
+        map_coord_y = math.floor(mapy_pixel/constants.CELL_HEIGHT)
 
         valid_tiles = []
 
@@ -1133,7 +1166,15 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
                     return(valid_tiles[-1])
 
         # Draw game first
-        draw_game()
+        SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
+        SURFACE_MAP.fill(constants.COLOR_BLACK)
+
+        CAMERA.update()
+
+        draw_map(GAME.current_map)
+
+        for obj in GAME.current_objects:
+            obj.draw()
 
         # Draw rectangle at mouse position on top of game
         for (tile_x, tile_y) in valid_tiles:
@@ -1149,6 +1190,11 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
             for (tile_x, tile_y) in area_effect:
                 draw_tile_rect(coords=(tile_x, tile_y),
                                tile_color=constants.COLOR_RED, tile_alpha=150)
+
+        SURFACE_MAIN.blit(SURFACE_MAP, (0, 0), CAMERA.rectangle)
+
+        draw_debug()
+        draw_messages()
 
         # Update the display
         pygame.display.flip()

@@ -956,8 +956,8 @@ def menu_pause():
     ''' This menu pauses the game and displays a simple message '''
     menu_close = False
 
-    window_width = constants.MAP_WIDTH * constants.CELL_WIDTH
-    window_height = constants.MAP_HEIGHT * constants.CELL_HEIGHT
+    window_width = constants.CAMERA_WIDTH
+    window_height = constants.CAMERA_HEIGHT
 
     menu_text = "PAUSED"
     menu_font = constants.FONT_DEBUG_MESSAGE
@@ -990,8 +990,8 @@ def menu_inventory():
     menu_width = 200
     menu_height = 200
 
-    window_width = constants.MAP_WIDTH * constants.CELL_WIDTH
-    window_height = constants.MAP_HEIGHT * constants.CELL_HEIGHT
+    window_width = constants.CAMERA_WIDTH
+    window_height = constants.CAMERA_HEIGHT
 
     menu_x = (window_width / 2) - (menu_width / 2)
     menu_y = (window_height / 2) - (menu_height / 2)

@@ -158,6 +158,19 @@ class obj_Game:
 
         self.message_history = []
 
+        self.current_map, self.current_rooms = map_create()
+
+    def transition_next(self):
+        global FOV_CALCULATE
+
+        FOV_CALCULATE = True
+
+        # Clear the previous items and enemies
+        self.current_objects = [PLAYER]
+
+        self.current_map, self.current_rooms = map_create()
+        map_place_objects(self.current_rooms)
+
 
 class obj_Spritesheet:
     '''Class used to grab images out of a sprite sheet'''
@@ -544,7 +557,6 @@ def map_create():
     # Generate a map full of walls
     new_map = [[struc_Tile(True) for y in range(0, constants.MAP_HEIGHT)]
                for x in range(0, constants.MAP_WIDTH)]
-    global PLAYER
     # Generate new room
     list_of_rooms = []
 
@@ -574,11 +586,7 @@ def map_create():
             map_create_room(new_map, new_room)
             current_center = new_room.center
 
-            if len(list_of_rooms) == 0:
-                PLAYER = gen_player(current_center)
-                GAME.current_objects.append(PLAYER)
-
-            else:
+            if len(list_of_rooms) != 0:
                 previous_center = list_of_rooms[-1].center
 
                 # Dig the tunnels
@@ -591,9 +599,16 @@ def map_create():
     return (new_map, list_of_rooms)
 
 
+def map_transition_next():
+    pass
+
+
 def map_place_objects(room_list):
 
     for room in room_list:
+
+        if room == room_list[0]:
+            PLAYER.x, PLAYER.y = room.center
 
         x = libtcodpy.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcodpy.random_get_int(0, room.y1 + 1, room.y2 - 1)
@@ -1230,12 +1245,13 @@ def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, p
 
 # PLAYER
 def gen_player(coords):
+    global PLAYER
     x, y = coords
     container_com = com_Container()
     creature_com = com_Creature("Snicky", base_atk=4)
-    player = obj_Actor(x, y, "Python", ASSETS.A_PLAYER,
+    PLAYER = obj_Actor(x, y, "Python", ASSETS.A_PLAYER,
                        animation_speed=1, creature=creature_com, container=container_com)
-    return player
+    GAME.current_objects.append(PLAYER)
 
 
 # ITEMS
@@ -1420,7 +1436,7 @@ def game_initialize():
     '''This function initializes the main window, and pygame'''
 
     global SURFACE_MAIN, SURFACE_MAP
-    global GAME, CLOCK, FOV_CALCULATE, ASSETS, CAMERA
+    global CLOCK, FOV_CALCULATE, ASSETS, CAMERA
     # initialize pygame
     pygame.init()
 
@@ -1438,15 +1454,12 @@ def game_initialize():
 
     ASSETS = struc_Assets()
 
-    GAME = obj_Game()
-
-    GAME.current_map, GAME.current_rooms = map_create()
-
-    map_place_objects(GAME.current_rooms)
-
     CLOCK = pygame.time.Clock()
 
     FOV_CALCULATE = True
+
+    # Starts a new game and map
+    game_new()
 
 
 def game_handle_keys():
@@ -1505,12 +1518,25 @@ def game_handle_keys():
             if event.key == pygame.K_c:
                 cast_confusion()
 
+            if event.key == pygame.K_t:
+                GAME.transition_next()
+
     return "no-action"
 
 
 def game_message(game_msg, msg_color=constants.COLOR_GREY):
 
     GAME.message_history.append((game_msg, msg_color))
+
+
+def game_new():
+    global GAME
+
+    GAME = obj_Game()
+
+    gen_player((0, 0))
+
+    map_place_objects(GAME.current_rooms)
 
 
 if __name__ == '__main__':

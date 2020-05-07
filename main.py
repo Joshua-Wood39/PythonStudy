@@ -155,21 +155,59 @@ class obj_Actor:
 class obj_Game:
     def __init__(self):
         self.current_objects = []
-
         self.message_history = []
+        self.maps_previous = []
+        self.maps_next = []
 
         self.current_map, self.current_rooms = map_create()
 
     def transition_next(self):
+
         global FOV_CALCULATE
 
         FOV_CALCULATE = True
 
-        # Clear the previous items and enemies
-        self.current_objects = [PLAYER]
+        self.maps_previous.append((PLAYER.x,
+                                   PLAYER.y,
+                                   self.current_map,
+                                   self.current_rooms,
+                                   self.current_objects))
 
-        self.current_map, self.current_rooms = map_create()
-        map_place_objects(self.current_rooms)
+        if len(self.maps_next) == 0:
+
+            # Clear the previous items and enemies
+            self.current_objects = [PLAYER]
+
+            self.current_map, self.current_rooms = map_create()
+            map_place_objects(self.current_rooms)
+
+        else:
+            (PLAYER.x, PLAYER.y, self.current_map, self.current_rooms,
+             self.current_objects) = self.maps_next[-1]
+
+            map_make_fov(self.current_map)
+            FOV_CALCULATE = True
+
+            # Stack method of removal
+            del self.maps_next[-1]
+
+    def transition_previous(self):
+        global FOV_CALCULATE
+
+        if len(self.maps_previous) != 0:
+            self.maps_next.append((PLAYER.x,
+                                   PLAYER.y,
+                                   self.current_map,
+                                   self.current_rooms,
+                                   self.current_objects))
+
+            (PLAYER.x, PLAYER.y, self.current_map, self.current_rooms,
+             self.current_objects) = self.maps_previous[-1]
+
+            map_make_fov(self.current_map)
+            FOV_CALCULATE = True
+
+            del self.maps_previous[-1]
 
 
 class obj_Spritesheet:
@@ -1520,6 +1558,9 @@ def game_handle_keys():
 
             if event.key == pygame.K_t:
                 GAME.transition_next()
+
+            if event.key == pygame.K_o:
+                GAME.transition_previous()
 
     return "no-action"
 

@@ -75,7 +75,7 @@ class struc_Assets:
 class obj_Actor:
     def __init__(self, x, y,
                  name_object,
-                 animation,
+                 animation_key,
                  animation_speed=.5,
                  creature=None,
                  ai=None,
@@ -85,7 +85,7 @@ class obj_Actor:
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
-        self.animation = animation  # list of images
+        self.animation = ASSETS.animation_dict[animation_key]  # list of images
         self.animation_speed = animation_speed / 1.0  # in seconds
 
         # animation flicker speedd

@@ -2,7 +2,7 @@ import constants
 import pygame
 import tcod as libtcodpy
 import math
-
+import pickle
 
 ##############################################################################
 # STRUCTURES
@@ -48,6 +48,23 @@ class struc_Assets:
         self.S_SCROLL_01 = pygame.image.load("assets/Scroll.png")
         self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
         self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
+
+        self.animation_dict{
+            ## ANIMATIONS ##
+            "A_PLAYER": self.A_PLAYER,
+            "A_ENEMY1": self.A_ENEMY1,
+            "A_ENEMY2": self.A_ENEMY2,
+
+            ## SPRITES ##
+            "S_SKULL": self.S_SKULL,
+
+            ## ITEMS ##
+            "S_SWORD": self.S_SWORD,
+            "S_SHIELD": self.S_SHIELD,
+            "S_SCROLL_01": self.S_SCROLL_01,
+            "S_SCROLL_02": self.S_SCROLL_02,
+            "S_SCROLL_03": self.S_SCROLL_03
+        }
 
 
 ##############################################################################
@@ -1450,7 +1467,7 @@ def game_main_loop():
         map_calculate_fov()
 
         if player_action == "QUIT":
-            game_quit = True
+            game_exit()
 
         elif player_action != "no-action":
             for obj in GAME.current_objects:
@@ -1578,6 +1595,16 @@ def game_new():
     gen_player((0, 0))
 
     map_place_objects(GAME.current_rooms)
+
+
+def game_exit():
+
+    with open('savedata\savegame', 'wb') as file:
+        pickle.dump([GAME, PLAYER], file)
+
+    # Quit the game
+    pygame.quit()
+    exit()
 
 
 if __name__ == '__main__':

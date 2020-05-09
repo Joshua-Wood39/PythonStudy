@@ -86,7 +86,9 @@ class obj_Actor:
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
-        self.animation = ASSETS.animation_dict[animation_key]  # list of images
+        self.animation_key = animation_key
+        # list of images
+        self.animation = ASSETS.animation_dict[self.animation_key]
         self.animation_speed = animation_speed / 1.0  # in seconds
 
         # animation flicker speedd
@@ -173,7 +175,7 @@ class obj_Actor:
         self.animation = None
 
     def animation_init(self):
-        pass
+        self.animation = ASSETS.animation_dict[self.animation_key]
 
 
 class obj_Game:
@@ -197,10 +199,15 @@ class obj_Game:
                                    self.current_rooms,
                                    self.current_objects))
 
+        for obj in self.current_objects:
+            obj.animation_destroy()
+
         if len(self.maps_next) == 0:
 
             # Clear the previous items and enemies
             self.current_objects = [PLAYER]
+
+            PLAYER.animation_init()
 
             self.current_map, self.current_rooms = map_create()
             map_place_objects(self.current_rooms)
@@ -208,6 +215,9 @@ class obj_Game:
         else:
             (PLAYER.x, PLAYER.y, self.current_map, self.current_rooms,
              self.current_objects) = self.maps_next[-1]
+
+            for obj in self.current_objects:
+                obj.animation_init()
 
             map_make_fov(self.current_map)
             FOV_CALCULATE = True
@@ -219,6 +229,10 @@ class obj_Game:
         global FOV_CALCULATE
 
         if len(self.maps_previous) != 0:
+
+            for obj in self.current_objects:
+                obj.animation_destroy()
+
             self.maps_next.append((PLAYER.x,
                                    PLAYER.y,
                                    self.current_map,
@@ -227,6 +241,9 @@ class obj_Game:
 
             (PLAYER.x, PLAYER.y, self.current_map, self.current_rooms,
              self.current_objects) = self.maps_previous[-1]
+
+            for obj in self.current_objects:
+                obj.animation_init()
 
             map_make_fov(self.current_map)
             FOV_CALCULATE = True
@@ -492,11 +509,17 @@ class com_Item:
             else:
                 game_message("Picking up", constants.COLOR_GREEN)
                 actor.container.inventory.append(self.owner)
+
+                self.owner.animation_destroy()
+
                 GAME.current_objects.remove(self.owner)
                 self.current_container = actor.container
 
     def drop(self, new_x, new_y):
         GAME.current_objects.append(self.owner)
+
+        self.owner.animation_init()
+
         self.container.inventory.remove(self.owner)
         self.owner.x = new_x
         self.owner.y = new_y
@@ -606,6 +629,7 @@ def death_monster(monster):
                  " is dead!", constants.COLOR_GREY)
 
     monster.animation = ASSETS.S_SKULL
+    monster.animation_key = "S_SKULL"
     monster.creature = None
     monster.ai = None
 
@@ -1521,7 +1545,10 @@ def game_initialize():
     FOV_CALCULATE = True
 
     # Starts a new game and map
-    game_new()
+    try:
+        game_load()
+    except:
+        game_new()
 
 
 def game_handle_keys():
@@ -1606,15 +1633,32 @@ def game_new():
 
 def game_exit():
 
+    game_save()
+
+    # Quit the game
+    pygame.quit()
+    exit()
+
+
+def game_save():
     for obj in GAME.current_objects:
         obj.animation_destroy()
 
     with gzip.open('savedata/savegame', 'wb') as file:
         pickle.dump([GAME, PLAYER], file)
 
-    # Quit the game
-    pygame.quit()
-    exit()
+
+def game_load():
+
+    global GAME, PLAYER
+
+    with gzip.open('savedata/savegame', 'rb') as file:
+        GAME, PLAYER = pickle.load(file)
+
+    for obj in GAME.current_objects:
+        obj.animation_init()
+
+    map_make_fov(GAME.current_map)
 
 
 if __name__ == '__main__':

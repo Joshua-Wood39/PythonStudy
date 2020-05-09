@@ -3,6 +3,7 @@ import pygame
 import tcod as libtcodpy
 import math
 import pickle
+import gzip
 
 ##############################################################################
 # STRUCTURES
@@ -49,7 +50,7 @@ class struc_Assets:
         self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
         self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
 
-        self.animation_dict{
+        self.animation_dict = {
             ## ANIMATIONS ##
             "A_PLAYER": self.A_PLAYER,
             "A_ENEMY1": self.A_ENEMY1,
@@ -61,9 +62,9 @@ class struc_Assets:
             ## ITEMS ##
             "S_SWORD": self.S_SWORD,
             "S_SHIELD": self.S_SHIELD,
-            "S_SCROLL_01": self.S_SCROLL_01,
-            "S_SCROLL_02": self.S_SCROLL_02,
-            "S_SCROLL_03": self.S_SCROLL_03
+            "S_SCROLL_01": [self.S_SCROLL_01],
+            "S_SCROLL_02": [self.S_SCROLL_02],
+            "S_SCROLL_03": [self.S_SCROLL_03]
         }
 
 
@@ -167,6 +168,12 @@ class obj_Actor:
         dy = int(round(dy / distance))
 
         self.creature.move(dx, dy)
+
+    def animation_destroy(self):
+        self.animation = None
+
+    def animation_init(self):
+        pass
 
 
 class obj_Game:
@@ -1304,7 +1311,7 @@ def gen_player(coords):
     x, y = coords
     container_com = com_Container()
     creature_com = com_Creature("Snicky", base_atk=4)
-    PLAYER = obj_Actor(x, y, "Python", ASSETS.A_PLAYER,
+    PLAYER = obj_Actor(x, y, "Python", "A_PLAYER",
                        animation_speed=1, creature=creature_com, container=container_com)
     GAME.current_objects.append(PLAYER)
 
@@ -1338,7 +1345,7 @@ def gen_scroll_lightning(coords):
     item_com = com_Item(use_function=cast_lightning, value=(damage, m_range))
 
     return_object = obj_Actor(x, y, "lightning scroll",
-                              animation=[ASSETS.S_SCROLL_01], item=item_com)
+                              animation_key="S_SCROLL_01", item=item_com)
 
     return return_object
 
@@ -1355,7 +1362,7 @@ def gen_scroll_fireball(coords):
                         value=(damage, radius, m_range))
 
     return_object = obj_Actor(x, y, "fireball scroll",
-                              animation=[ASSETS.S_SCROLL_02], item=item_com)
+                              animation_key="S_SCROLL_02", item=item_com)
 
     return return_object
 
@@ -1370,7 +1377,7 @@ def gen_scroll_confusion(coords):
                         value=effect_length)
 
     return_object = obj_Actor(x, y, "confusion scroll",
-                              animation=[ASSETS.S_SCROLL_03], item=item_com)
+                              animation_key="S_SCROLL_03", item=item_com)
 
     return return_object
 
@@ -1384,7 +1391,7 @@ def gen_weapon_sword(coords):
     equipment_com = com_Equipment(attack_bonus=bonus)
 
     return_object = obj_Actor(
-        x, y, "Short Sword", animation=ASSETS.S_SWORD, equipment=equipment_com)
+        x, y, "Short Sword", animation_key="S_SWORD", equipment=equipment_com)
 
     return return_object
 
@@ -1398,7 +1405,7 @@ def gen_armor_shield(coords):
     equipment_com = com_Equipment(defense_bonus=bonus)
 
     return_object = obj_Actor(
-        x, y, "Small Shield", animation=ASSETS.S_SHIELD, equipment=equipment_com)
+        x, y, "Small Shield", animation_key="S_SHIELD", equipment=equipment_com)
 
     return return_object
 
@@ -1426,7 +1433,7 @@ def gen_aquatic_lobster(coords):
     creature_com = com_Creature(
         "Flippy", base_atk=base_attack, hp=max_health, death_function=death_monster)
     ai_com = ai_Chase()
-    enemy = obj_Actor(x, y, "Rock Lobster", ASSETS.A_ENEMY1,
+    enemy = obj_Actor(x, y, "Rock Lobster", animation_key="A_ENEMY1",
                       animation_speed=1, creature=creature_com, ai=ai_com, item=item_com)
     return enemy
 
@@ -1442,7 +1449,7 @@ def gen_aquatic_squid(coords):
     creature_com = com_Creature(
         "Poots", base_atk=base_attack, hp=max_health, death_function=death_monster)
     ai_com = ai_Chase()
-    enemy = obj_Actor(x, y, "Fugly Squid", ASSETS.A_ENEMY2, animation_speed=1,
+    enemy = obj_Actor(x, y, "Fugly Squid", animation_key="A_ENEMY2", animation_speed=1,
                       creature=creature_com, ai=ai_com, item=item_com)
     return enemy
 
@@ -1599,7 +1606,10 @@ def game_new():
 
 def game_exit():
 
-    with open('savedata\savegame', 'wb') as file:
+    for obj in GAME.current_objects:
+        obj.animation_destroy()
+
+    with gzip.open('savedata/savegame', 'wb') as file:
         pickle.dump([GAME, PLAYER], file)
 
     # Quit the game

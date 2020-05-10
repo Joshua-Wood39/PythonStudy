@@ -1172,8 +1172,43 @@ def cast_confusion(caster, effect_length):
 
 
 ##############################################################################
+# UI
+##############################################################################
+
+
+class ui_Button:
+
+    def __init__(self,
+                 surface,
+                 button_text,
+                 size,
+                 coords,
+                 color_box_mouseover=constants.COLOR_RED,
+                 color_box_default=constants.COLOR_GREEN,
+                 color_text_mouseover=constants.COLOR_GREY,
+                 color_text_default=constants.COLOR_GREY):
+
+        self.surface = surface
+        self.button_text = button_text
+        self.size = size
+        self.coords = coords
+
+        self.c_box_mo = color_box_mouseover
+        self.c_box_default = color_box_default
+        self.c_text_mo = color_text_mouseover
+        self.c_test_default = color_text_default
+
+
+##############################################################################
 # MENUS
 ##############################################################################
+
+
+def menu_main():
+
+    menu_running = True
+
+    while menu_running:
 
 
 def menu_pause():

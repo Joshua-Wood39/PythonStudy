@@ -23,6 +23,7 @@ class struc_Assets:
         self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
         self.environmentsheet = obj_Spritesheet("assets/DungeonStarter.png")
         self.itemsheet = obj_Spritesheet("assets/pngguru.com.png")
+        self.mousesheet = obj_Spritesheet("assets/Mouse.png")
 
         ## ANIMATIONS ##
         self.A_PLAYER = self.charspritesheet.get_animation(
@@ -31,6 +32,8 @@ class struc_Assets:
             'k', 1, 16, 16, 2, (32, 32))
         self.A_ENEMY2 = self.enemyspritesheet.get_animation(
             'a', 5, 16, 16, 2, (32, 32))
+        self.A_MOUSE = self.mousesheet.get_animation(
+            'aa', 0, 32, 32, 2, (32, 32))
 
         ## SPRITES ##
         self.S_WALL = pygame.image.load("assets/Wall2.jpg")
@@ -59,6 +62,7 @@ class struc_Assets:
             "A_PLAYER": self.A_PLAYER,
             "A_ENEMY1": self.A_ENEMY1,
             "A_ENEMY2": self.A_ENEMY2,
+            "A_MOUSE": self.A_MOUSE,
 
             ## SPRITES ##
             "S_SKULL": self.S_SKULL,
@@ -184,6 +188,17 @@ class obj_Actor:
 
         self.creature.move(dx, dy)
 
+    def move_away(self, other):
+        dx = self.x - other.x
+        dy = self.y - other.y
+
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+
+        dx = int(round(dx / distance))
+        dy = int(round(dy / distance))
+
+        self.creature.move(dx, dy)
+
     def animation_destroy(self):
         self.animation = None
 
@@ -270,7 +285,7 @@ class obj_Spritesheet:
     def __init__(self, file_name):
         # Load the sprite sheet.
         self.sprite_sheet = pygame.image.load(file_name).convert()
-        self.tiledict = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7,
+        self.tiledict = {'aa': 0, 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7,
                          'h': 8, 'i': 9, 'j': 10, 'k': 11, 'l': 12, 'm': 13, 'n': 14, 'o': 15, 'p': 16}
 
     def get_image(self, column, row, width=constants.CELL_WIDTH, height=constants.CELL_HEIGHT, scale=None):
@@ -648,6 +663,16 @@ class ai_Chase:
                 monster.creature.attack(PLAYER)
 
 
+class ai_Flee:
+
+    def take_turn(self):
+        monster = self.owner
+
+        if libtcodpy.map_is_in_fov(FOV_MAP, monster.x, monster.y):
+
+            self.owner.move_away(PLAYER)
+
+
 def death_monster(monster):
     '''On death, most monsters stop moving'''
 
@@ -658,6 +683,16 @@ def death_monster(monster):
     monster.animation_key = "S_SKULL"
     monster.creature = None
     monster.ai = None
+
+
+def death_mouse(mouse):
+    game_message(mouse.creature.name_instance +
+                 " is dead! Eat him!", constants.COLOR_GREEN)
+
+    mouse.animation = ASSETS.S_SKULL
+    mouse.animation_key = "S_SKULL"
+    mouse.creature = None
+    mouse.ai = None
 
 
 ##############################################################################
@@ -1494,6 +1529,8 @@ def gen_enemy(coords):
 
     if random_num <= 15:
         new_enemy = gen_aquatic_squid(coords)
+    elif random_num <= 70:
+        new_enemy = gen_mouse(coords)
     else:
         new_enemy = gen_aquatic_lobster(coords)
 
@@ -1530,6 +1567,29 @@ def gen_aquatic_squid(coords):
     enemy = obj_Actor(x, y, "Fugly Squid", animation_key="A_ENEMY2", animation_speed=1,
                       creature=creature_com, ai=ai_com, item=item_com)
     return enemy
+
+
+def gen_mouse(coords):
+
+    x, y = coords
+
+    base_attack = 0
+
+    max_health = 1
+
+    creature_name = "Mousy"
+
+    creature_com = com_Creature(
+        creature_name, base_atk=base_attack, hp=max_health, death_function=death_mouse)
+
+    ai_com = ai_Flee()
+
+    item_com = com_Item(use_function=cast_heal, value=5)
+
+    mouse = obj_Actor(x, y, "Mouse", animation_key="A_MOUSE",
+                      animation_speed=1, creature=creature_com, item=item_com, ai=ai_com)
+
+    return mouse
 
 
 ##############################################################################

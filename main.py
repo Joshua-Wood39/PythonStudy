@@ -50,6 +50,10 @@ class struc_Assets:
         self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
         self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
 
+        ## SPECIAL ##
+        self.S_UPSTAIRS = [pygame.image.load("assets/Upstairs.png")]
+        self.S_DOWNSTAIRS = [pygame.image.load("assets/Downstairs.png")]
+
         self.animation_dict = {
             ## ANIMATIONS ##
             "A_PLAYER": self.A_PLAYER,
@@ -64,7 +68,11 @@ class struc_Assets:
             "S_SHIELD": self.S_SHIELD,
             "S_SCROLL_01": [self.S_SCROLL_01],
             "S_SCROLL_02": [self.S_SCROLL_02],
-            "S_SCROLL_03": [self.S_SCROLL_03]
+            "S_SCROLL_03": [self.S_SCROLL_03],
+
+            ## SPECIAL ##
+            "S_STAIRS_UP": self.S_UPSTAIRS,
+            "S_STAIRS_DOWN": self.S_DOWNSTAIRS
         }
 
 
@@ -82,7 +90,8 @@ class obj_Actor:
                  ai=None,
                  container=None,
                  item=None,
-                 equipment=None):
+                 equipment=None,
+                 stairs=None):
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
@@ -118,6 +127,10 @@ class obj_Actor:
 
             self.item = com_Item()
             self.item.owner = self
+
+        self.stairs = stairs
+        if self.stairs:
+            self.stairs.owner = self
 
     @property  # Can call the method as a property
     def display_name(self):
@@ -578,6 +591,19 @@ class com_Equipment:
         game_message("Item unequipped")
 
 
+class com_Stairs:
+
+    def __init__(self, downwards=True):
+
+        self.downwards = downwards
+
+    def use(self):
+        if self.downwards:
+            GAME.transition_next()
+        else:
+            GAME.transition_previous()
+
+
 ##############################################################################
 # AI
 ##############################################################################
@@ -691,10 +717,21 @@ def map_transition_next():
 
 def map_place_objects(room_list):
 
+    top_level = (len(GAME.maps_previous) == 0)
+
     for room in room_list:
 
-        if room == room_list[0]:
+        first_room = (room == room_list[0])
+        last_room = (room == room_list[-1])
+
+        if first_room:
             PLAYER.x, PLAYER.y = room.center
+
+        if first_room and not top_level:
+            gen_stairs((PLAYER.x, PLAYER.y), downwards=False)
+
+        if last_room:
+            gen_stairs(room.center)
 
         x = libtcodpy.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcodpy.random_get_int(0, room.y1 + 1, room.y2 - 1)
@@ -1340,6 +1377,23 @@ def gen_player(coords):
     GAME.current_objects.append(PLAYER)
 
 
+# SPECIAL
+def gen_stairs(coords, downwards=True):
+
+    x, y = coords
+
+    if downwards:
+        stairs_com = com_Stairs()
+        stairs = obj_Actor(
+            x, y, "stairs", animation_key="S_STAIRS_DOWN", stairs=stairs_com)
+    else:
+        stairs_com = com_Stairs(downwards)
+        stairs = obj_Actor(
+            x, y, "stairs", animation_key="S_STAIRS_UP", stairs=stairs_com)
+
+    GAME.current_objects.append(stairs)
+
+
 # ITEMS
 def gen_item(coords):
 
@@ -1554,7 +1608,11 @@ def game_initialize():
 def game_handle_keys():
     global FOV_CALCULATE
     # get player input
+    keys_list = pygame.key.get_pressed()
     event_list = pygame.event.get()
+
+    # Check for mod key
+    MOD_KEY = (keys_list[pygame.K_RSHIFT] or keys_list[pygame.K_LSHIFT])
 
     # process input
     for event in event_list:
@@ -1607,11 +1665,11 @@ def game_handle_keys():
             if event.key == pygame.K_c:
                 cast_confusion()
 
-            if event.key == pygame.K_t:
-                GAME.transition_next()
-
-            if event.key == pygame.K_o:
-                GAME.transition_previous()
+            if MOD_KEY and event.key == pygame.K_PERIOD:
+                list_of_objects = map_objects_at_coords(PLAYER.x, PLAYER.y)
+                for obj in list_of_objects:
+                    if obj.stairs:
+                        obj.stairs.use()
 
     return "no-action"
 

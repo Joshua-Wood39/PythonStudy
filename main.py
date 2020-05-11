@@ -1192,7 +1192,7 @@ class ui_Button:
         self.c_box_mo = color_box_mouseover
         self.c_box_default = color_box_default
         self.c_text_mo = color_text_mouseover
-        self.c_test_default = color_text_default
+        self.c_text_default = color_text_default
         self.current_c_box = color_box_default
         self.current_c_text = color_text_default
 
@@ -1218,6 +1218,13 @@ class ui_Button:
 
         if mouse_over and mouse_clicked:
             return True
+
+        if mouse_over:
+            self.current_c_box = self.c_box_mo
+            self.current_c_text = self.c_text_mo
+        else:
+            self.current_c_box = self.c_box_default
+            self.current_c_text = self.c_text_default
 
     def draw(self):
 

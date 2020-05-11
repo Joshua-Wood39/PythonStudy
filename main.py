@@ -1244,8 +1244,12 @@ def menu_main():
 
     menu_running = True
 
-    test_button = ui_Button(SURFACE_MAIN, "Test", (150, 35),
-                            (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2))
+    title_x = constants.CAMERA_WIDTH/2
+    title_y = constants.CAMERA_HEIGHT/2 - 40
+    title_text = "Kick-Ass Snickety Snake Game"
+
+    test_button = ui_Button(SURFACE_MAIN, "Start Game", (150, 35),
+                            (title_x, title_y + 40))
 
     while menu_running:
 
@@ -1265,7 +1269,9 @@ def menu_main():
             game_start()
 
         # Draw menu
-        SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
+        SURFACE_MAIN.fill(constants.COLOR_BLACK)
+        draw_text(SURFACE_MAIN, title_text, constants.FONT_MESSAGE_TEXT,
+                  (title_x, title_y), constants.COLOR_RED, center=True)
         test_button.draw()
 
         # Update menu

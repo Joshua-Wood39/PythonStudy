@@ -1200,8 +1200,24 @@ class ui_Button:
         self.rect.center = center_coords
 
     def update(self, player_input):
-        pass
-        # TODO
+
+        mouse_clicked = False
+
+        local_events, local_mousepos = player_input
+        mouse_x, mouse_y = local_mousepos
+
+        mouse_over = (mouse_x >= self.rect.left
+                      and mouse_x <= self.rect.right
+                      and mouse_y >= self.rect.top
+                      and mouse_y <= self.rect.bottom)
+
+        for event in local_events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_clicked = True
+
+        if mouse_over and mouse_clicked:
+            return True
 
     def draw(self):
 
@@ -1229,10 +1245,17 @@ def menu_main():
         list_of_events = pygame.event.get()
         mouse_position = pygame.mouse.get_pos()
 
+        game_input = (list_of_events, mouse_position)
+
+        # Handle Menu Events
         for event in list_of_events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+
+        # Button updates
+        if test_button.update(game_input):
+            game_start()
 
         # Draw menu
         SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
@@ -1846,6 +1869,8 @@ def game_start():
         game_load()
     except:
         game_new()
+
+    game_main_loop()
 
 
 if __name__ == '__main__':

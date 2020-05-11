@@ -1178,11 +1178,7 @@ def cast_confusion(caster, effect_length):
 
 class ui_Button:
 
-    def __init__(self,
-                 surface,
-                 button_text,
-                 size,
-                 coords,
+    def __init__(self, surface, button_text, size, center_coords,
                  color_box_mouseover=constants.COLOR_RED,
                  color_box_default=constants.COLOR_GREEN,
                  color_text_mouseover=constants.COLOR_GREY,
@@ -1191,12 +1187,27 @@ class ui_Button:
         self.surface = surface
         self.button_text = button_text
         self.size = size
-        self.coords = coords
+        self.center_coords = center_coords
 
         self.c_box_mo = color_box_mouseover
         self.c_box_default = color_box_default
         self.c_text_mo = color_text_mouseover
         self.c_test_default = color_text_default
+        self.current_c_box = color_box_default
+        self.current_c_text = color_text_default
+
+        self.rect = pygame.Rect((0, 0), size)
+        self.rect.center = center_coords
+
+    def update(self, player_input):
+        pass
+        # TODO
+
+    def draw(self):
+
+        pygame.draw.rect(self.surface, self.current_c_box, self.rect)
+        draw_text(self.surface, self.button_text, constants.FONT_DEBUG_MESSAGE,
+                  self.center_coords, self.current_c_text, center=True)
 
 
 ##############################################################################
@@ -1206,9 +1217,29 @@ class ui_Button:
 
 def menu_main():
 
+    game_initialize()
+
     menu_running = True
 
+    test_button = ui_Button(SURFACE_MAIN, "Test", (150, 35),
+                            (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2))
+
     while menu_running:
+
+        list_of_events = pygame.event.get()
+        mouse_position = pygame.mouse.get_pos()
+
+        for event in list_of_events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        # Draw menu
+        SURFACE_MAIN.fill(constants.COLOR_DEFAULT_BG)
+        test_button.draw()
+
+        # Update menu
+        pygame.display.update()
 
 
 def menu_pause():
@@ -1693,12 +1724,6 @@ def game_initialize():
 
     FOV_CALCULATE = True
 
-    # Starts a new game and map
-    try:
-        game_load()
-    except:
-        game_new()
-
 
 def game_handle_keys():
     global FOV_CALCULATE
@@ -1814,6 +1839,14 @@ def game_load():
     map_make_fov(GAME.current_map)
 
 
+def game_start():
+
+    # Starts the game, or loads a saved game
+    try:
+        game_load()
+    except:
+        game_new()
+
+
 if __name__ == '__main__':
-    game_initialize()
-    game_main_loop()
+    menu_main()

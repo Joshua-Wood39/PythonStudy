@@ -79,6 +79,13 @@ class struc_Assets:
             "S_STAIRS_DOWN": self.S_DOWNSTAIRS
         }
 
+        ## AUDIO ##
+        self.music_background = "audio/"
+        self.sound_hit_1 = pygame.mixer.Sound("audio/Real_Punch.wav")
+        self.sound_hit_2 = pygame.mixer.Sound("audio/Strong_Punch.wav")
+
+        self.snd_list_hit = [self.sound_hit_1, self.sound_hit_2]
+
 
 ##############################################################################
 # OBJECTS

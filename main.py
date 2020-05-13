@@ -80,7 +80,7 @@ class struc_Assets:
         }
 
         ## AUDIO ##
-        self.music_background = "audio/"
+        self.music_background = "audio/African Safari Loop.wav"
         self.sound_hit_1 = pygame.mixer.Sound("audio/Real_Punch.wav")
         self.sound_hit_2 = pygame.mixer.Sound("audio/Strong_Punch.wav")
 
@@ -1255,8 +1255,16 @@ def menu_main():
     title_y = constants.CAMERA_HEIGHT/2 - 40
     title_text = "Kick-Ass Snickety Snake Game"
 
+    SURFACE_MAIN.fill(constants.COLOR_BLACK)
+
+    draw_text(SURFACE_MAIN, title_text, constants.FONT_MESSAGE_TEXT,
+              (title_x, title_y), constants.COLOR_RED, center=True)
+
     test_button = ui_Button(SURFACE_MAIN, "Start Game", (150, 35),
                             (title_x, title_y + 40))
+
+    pygame.mixer.music.load(ASSETS.music_background)
+    pygame.mixer.music.play()
 
     while menu_running:
 
@@ -1273,12 +1281,10 @@ def menu_main():
 
         # Button updates
         if test_button.update(game_input):
+            pygame.mixer.music.stop()
             game_start()
 
         # Draw menu
-        SURFACE_MAIN.fill(constants.COLOR_BLACK)
-        draw_text(SURFACE_MAIN, title_text, constants.FONT_MESSAGE_TEXT,
-                  (title_x, title_y), constants.COLOR_RED, center=True)
         test_button.draw()
 
         # Update menu

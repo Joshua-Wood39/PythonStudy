@@ -4,6 +4,7 @@ import tcod as libtcodpy
 import math
 import pickle
 import gzip
+import random
 
 ##############################################################################
 # STRUCTURES
@@ -456,6 +457,9 @@ class com_Creature:
         game_message(self.name_instance + " attacks " +
                      target.creature.name_instance + " for " + str(damage_dealt) + " damage!", constants.COLOR_WHITE)
         target.creature.take_damage(damage_dealt)
+
+        if damage_dealt > 0 and self.owner is PLAYER:
+            pygame.mixer.Sound.play(RANDOM_ENGINE.choice(ASSETS.snd_list_hit))
 
     def take_damage(self, damage):
         self.current_hp -= damage
@@ -1751,7 +1755,7 @@ def game_initialize():
     '''This function initializes the main window, and pygame'''
 
     global SURFACE_MAIN, SURFACE_MAP
-    global CLOCK, FOV_CALCULATE, ASSETS, CAMERA
+    global CLOCK, FOV_CALCULATE, ASSETS, CAMERA, RANDOM_ENGINE
     # initialize pygame
     pygame.init()
 
@@ -1770,6 +1774,9 @@ def game_initialize():
     ASSETS = struc_Assets()
 
     CLOCK = pygame.time.Clock()
+
+    # Random Number Engine
+    RANDOM_ENGINE = random.SystemRandom()
 
     FOV_CALCULATE = True
 

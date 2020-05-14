@@ -57,6 +57,9 @@ class struc_Assets:
         ## SPECIAL ##
         self.S_UPSTAIRS = [pygame.image.load("assets/Upstairs.png")]
         self.S_DOWNSTAIRS = [pygame.image.load("assets/Downstairs.png")]
+        self.MAIN_MENU_BG = pygame.image.load("assets/Live Python.jpg")
+        # self.MAIN_MENU_BG = pygame.transform.scale(
+        # self.MAIN_MENU_BG, (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
 
         self.animation_dict = {
             ## ANIMATIONS ##
@@ -81,11 +84,22 @@ class struc_Assets:
         }
 
         ## AUDIO ##
+
+        self.snd_list = []
+
         self.music_background = "audio/African Safari Loop.wav"
-        self.sound_hit_1 = pygame.mixer.Sound("audio/Real_Punch.wav")
-        self.sound_hit_2 = pygame.mixer.Sound("audio/Strong_Punch.wav")
+        self.sound_hit_1 = self.add_sound("audio/Real_Punch.wav")
+        self.sound_hit_2 = self.add_sound("audio/Strong_Punch.wav")
 
         self.snd_list_hit = [self.sound_hit_1, self.sound_hit_2]
+
+    def add_sound(self, file_address):
+
+        new_sound = pygame.mixer.Sound(file_address)
+
+        self.snd_list.append(new_sound)
+
+        return new_sound
 
 
 ##############################################################################
@@ -1259,7 +1273,7 @@ def menu_main():
     title_y = constants.CAMERA_HEIGHT/2 - 40
     title_text = "Kick-Ass Snickety Snake Game"
 
-    SURFACE_MAIN.fill(constants.COLOR_BLACK)
+    SURFACE_MAIN.blit(ASSETS.MAIN_MENU_BG, (0, 0))
 
     draw_text(SURFACE_MAIN, title_text, constants.FONT_MESSAGE_TEXT,
               (title_x, title_y), constants.COLOR_RED, center=True)

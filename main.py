@@ -1273,13 +1273,28 @@ def menu_main():
     title_y = constants.CAMERA_HEIGHT/2 - 40
     title_text = "Kick-Ass Snickety Snake Game"
 
+    # Button Addresses
+    continue_button_y = title_y + 40
+    new_button_y = continue_button_y + 40
+    options_button_y = new_button_y + 40
+    quit_button_y = options_button_y + 40
+
     SURFACE_MAIN.blit(ASSETS.MAIN_MENU_BG, (0, 0))
 
-    draw_text(SURFACE_MAIN, title_text, constants.FONT_MESSAGE_TEXT,
-              (title_x, title_y), constants.COLOR_RED, center=True)
+    draw_text(SURFACE_MAIN, title_text, constants.FONT_TITLE_SCREEN,
+              (title_x, title_y), constants.COLOR_RED, back_color=constants.COLOR_BLACK, center=True)
 
-    test_button = ui_Button(SURFACE_MAIN, "Start Game", (150, 35),
-                            (title_x, title_y + 40))
+    continue_game_button = ui_Button(SURFACE_MAIN, "Continue", (150, 35),
+                                     (title_x, continue_button_y))
+
+    new_game_button = ui_Button(SURFACE_MAIN, "New Game", (150, 35),
+                                (title_x, new_button_y))
+
+    options_button = ui_Button(SURFACE_MAIN, "Options", (150, 35),
+                               (title_x, options_button_y))
+
+    quit_button = ui_Button(SURFACE_MAIN, "Quit", (150, 35),
+                            (title_x, quit_button_y))
 
     pygame.mixer.music.load(ASSETS.music_background)
     pygame.mixer.music.play()
@@ -1298,15 +1313,40 @@ def menu_main():
                 exit()
 
         # Button updates
-        if test_button.update(game_input):
+        if continue_game_button.update(game_input):
             pygame.mixer.music.stop()
-            game_start()
+
+            try:
+                game_load()
+            except:
+                game_new()
+
+            game_main_loop()
+
+        if new_game_button.update(game_input):
+            pygame.mixer.music.stop()
+            game_new()
+            game_main_loop()
+
+        if options_button.update(game_input):
+            pass
+
+        if quit_button.update(game_input):
+            pygame.quit()
+            exit()
 
         # Draw menu
-        test_button.draw()
+        continue_game_button.draw()
+        new_game_button.draw()
+        options_button.draw()
+        quit_button.draw()
 
         # Update menu
         pygame.display.update()
+
+
+def menu_main_options():
+    pass
 
 
 def menu_pause():
@@ -1909,7 +1949,7 @@ def game_load():
     map_make_fov(GAME.current_map)
 
 
-def game_start():
+def game_continue():
 
     # Starts the game, or loads a saved game
     try:

@@ -5,6 +5,7 @@ import math
 import pickle
 import gzip
 import random
+import sys
 
 ##############################################################################
 # STRUCTURES
@@ -1310,7 +1311,7 @@ def menu_main():
         for event in list_of_events:
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
 
         # Button updates
         if continue_game_button.update(game_input):
@@ -1329,11 +1330,14 @@ def menu_main():
             game_main_loop()
 
         if options_button.update(game_input):
-            pass
+            menu_main_options()
+            SURFACE_MAIN.blit(ASSETS.MAIN_MENU_BG, (0, 0))
+            draw_text(SURFACE_MAIN, title_text, constants.FONT_TITLE_SCREEN,
+                      (title_x, title_y), constants.COLOR_RED, back_color=constants.COLOR_BLACK, center=True)
 
         if quit_button.update(game_input):
             pygame.quit()
-            exit()
+            sys.exit()
 
         # Draw menu
         continue_game_button.draw()
@@ -1346,7 +1350,44 @@ def menu_main():
 
 
 def menu_main_options():
-    pass
+
+    # Menu Vars
+    settings_menu_w = 200
+    settings_menu_h = 200
+    settings_menu_bgcolor = constants.COLOR_GREY
+
+    window_center = (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2)
+
+    settings_menu_surface = pygame.Surface((settings_menu_w, settings_menu_h))
+
+    settings_menu_rect = pygame.Rect(0, 0, settings_menu_w, settings_menu_h)
+
+    settings_menu_rect.center = window_center
+
+    menu_close = False
+
+    settings_menu_surface.fill(settings_menu_bgcolor)
+
+    SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
+
+    while not menu_close:
+
+        list_of_events = pygame.event.get()
+        mouse_position = pygame.mouse.get_pos()
+
+        game_input = (list_of_events, mouse_position)
+
+        # Handle Menu Events
+        for event in list_of_events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    menu_close = True
+
+        pygame.display.update()
 
 
 def menu_pause():
@@ -1925,7 +1966,7 @@ def game_exit():
 
     # Quit the game
     pygame.quit()
-    exit()
+    sys.exit()
 
 
 def game_save():

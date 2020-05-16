@@ -1256,15 +1256,19 @@ class ui_Button:
 
 
 class ui_Slider:
-    def __init__(self, surface, size, center_coords, bg_color, fg_color):
+    def __init__(self, surface, size, center_coords, bg_color, fg_color, parameter_value):
 
         self.surface = surface
         self.size = size
         self.bg_color = bg_color
         self.fg_color = fg_color
+        self.current_val = parameter_value
 
-        self.rect = pygame.Rect((0, 0), size)
-        self.rect.center = center_coords
+        self.bg_rect = pygame.Rect((0, 0), size)
+        self.bg_rect.center = center_coords
+        self.fg_rect = pygame.Rect(
+            (0, 0), (self.bg_rect.width * self.current_val, self.bg_rect.height))
+        self.fg_rect.topleft = self.bg_rect.topleft
 
     def update(self, player_input):
 
@@ -1274,13 +1278,22 @@ class ui_Slider:
         local_events, local_mousepos = player_input
         mouse_x, mouse_y = local_mousepos
 
-        mouse_over = (mouse_x >= self.rect.left
-                      and mouse_x <= self.rect.right
-                      and mouse_y >= self.rect.top
-                      and mouse_y <= self.rect.bottom)
+        mouse_over = (mouse_x >= self.bg_rect.left
+                      and mouse_x <= self.bg_rect.right
+                      and mouse_y >= self.bg_rect.top
+                      and mouse_y <= self.bg_rect.bottom)
+
+        if mouse_down and mouse_over:
+            self.current_val = (mouse_x - self.bg_rect.left)/self.bg_rect.width
+
+            self.fg_rect.width = self.bg_rect.width * self.current_val
 
     def draw(self):
-        pygame.draw.rect(self.surface, self.bg_color, self.rect)
+        # Draw bg rect ~ RED
+        pygame.draw.rect(self.surface, self.bg_color, self.bg_rect)
+
+        # Draw fg rect ~ GREEN
+        pygame.draw.rect(self.surface, self.fg_color, self.fg_rect)
 
 
 ##############################################################################
@@ -1383,6 +1396,7 @@ def menu_main_options():
     # Slider Vars
     slider_x = constants.CAMERA_WIDTH/2
     sound_effect_slider_y = constants.CAMERA_HEIGHT/2
+    sound_effect_vol = 0.5  # Sound is on a scale of 0.0 -> 1.0 in pygame.mixer
 
     window_center = (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2)
 
@@ -1399,7 +1413,7 @@ def menu_main_options():
     SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
 
     sound_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
-        slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN)
+        slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, 0.5)
 
     while not menu_close:
 

@@ -772,10 +772,6 @@ def map_create():
     return (new_map, list_of_rooms)
 
 
-def map_transition_next():
-    pass
-
-
 def map_place_objects(room_list):
 
     top_level = (len(GAME.maps_previous) == 0)
@@ -1259,6 +1255,34 @@ class ui_Button:
                   self.center_coords, self.current_c_text, center=True)
 
 
+class ui_Slider:
+    def __init__(self, surface, size, center_coords, bg_color, fg_color):
+
+        self.surface = surface
+        self.size = size
+        self.bg_color = bg_color
+        self.fg_color = fg_color
+
+        self.rect = pygame.Rect((0, 0), size)
+        self.rect.center = center_coords
+
+    def update(self, player_input):
+
+        # Will be '1' if the left mouse button is held down
+        mouse_down = pygame.mouse.get_pressed()[0]  # Returns a tuple (0,0,0)
+
+        local_events, local_mousepos = player_input
+        mouse_x, mouse_y = local_mousepos
+
+        mouse_over = (mouse_x >= self.rect.left
+                      and mouse_x <= self.rect.right
+                      and mouse_y >= self.rect.top
+                      and mouse_y <= self.rect.bottom)
+
+    def draw(self):
+        pygame.draw.rect(self.surface, self.bg_color, self.rect)
+
+
 ##############################################################################
 # MENUS
 ##############################################################################
@@ -1356,6 +1380,10 @@ def menu_main_options():
     settings_menu_h = 200
     settings_menu_bgcolor = constants.COLOR_GREY
 
+    # Slider Vars
+    slider_x = constants.CAMERA_WIDTH/2
+    sound_effect_slider_y = constants.CAMERA_HEIGHT/2
+
     window_center = (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2)
 
     settings_menu_surface = pygame.Surface((settings_menu_w, settings_menu_h))
@@ -1369,6 +1397,9 @@ def menu_main_options():
     settings_menu_surface.fill(settings_menu_bgcolor)
 
     SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
+
+    sound_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
+        slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN)
 
     while not menu_close:
 
@@ -1386,6 +1417,9 @@ def menu_main_options():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     menu_close = True
+
+        sound_effect_slider.update(game_input)
+        sound_effect_slider.draw()
 
         pygame.display.update()
 

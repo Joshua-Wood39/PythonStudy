@@ -1439,6 +1439,9 @@ def menu_main_options():
     sound_text_y = sound_effect_slider_y - text_y_offset
     music_text_y = music_effect_slider_y - text_y_offset
 
+    # Button Vars
+    button_save_y = music_effect_slider_y + 50
+
     window_center = (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2)
 
     settings_menu_surface = pygame.Surface((settings_menu_w, settings_menu_h))
@@ -1454,6 +1457,15 @@ def menu_main_options():
 
     music_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
         slider_x, music_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, PREFERENCES.vol_music)
+
+    save_button = ui_Button(SURFACE_MAIN,
+                            "Save",
+                            (100, 30),
+                            (slider_x, button_save_y),
+                            constants.COLOR_D_GREY,
+                            constants.COLOR_GREEN,
+                            constants.COLOR_BLACK,
+                            constants.COLOR_BLACK)
 
     while not menu_close:
 
@@ -1486,6 +1498,11 @@ def menu_main_options():
             PREFERENCES.vol_music = music_effect_slider.current_val
             ASSETS.volume_adjust()
 
+        if save_button.update(game_input):
+            preferences_save()
+            menu_close = True
+
+        # Draw the Menu
         settings_menu_surface.fill(settings_menu_bgcolor)
         SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
         draw_text(SURFACE_MAIN, "SOUND FX", constants.FONT_DEBUG_MESSAGE,
@@ -1494,6 +1511,7 @@ def menu_main_options():
                   (slider_x, music_text_y), constants.COLOR_BLACK, center=True)
         sound_effect_slider.draw()
         music_effect_slider.draw()
+        save_button.draw()
 
         pygame.display.update()
 
@@ -1968,7 +1986,10 @@ def game_initialize():
     pygame.font.init()
 
     # Initialize Preferences
-    PREFERENCES = struc_Preferences()
+    try:
+        preferences_load()
+    except:
+        PREFERENCES = struc_Preferences()
 
     SURFACE_MAIN = pygame.display.set_mode(
         (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
@@ -2111,6 +2132,18 @@ def game_continue():
         game_new()
 
     game_main_loop()
+
+
+def preferences_save():
+    with gzip.open('savedata/prefs', 'wb') as file:
+        pickle.dump(PREFERENCES, file)
+
+
+def preferences_load():
+    global PREFERENCES
+
+    with gzip.open('savedata/prefs', 'rb') as file:
+        PREFERENCES = pickle.load(file)
 
 
 if __name__ == '__main__':

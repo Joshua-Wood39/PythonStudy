@@ -18,89 +18,10 @@ class struc_Tile:
         self.explored = False
 
 
-class struc_Assets:
+class struc_Preferences:
     def __init__(self):
-        ## SPRITESHEETS ##
-        self.charspritesheet = obj_Spritesheet("assets/Reptiles.png")
-        self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
-        self.environmentsheet = obj_Spritesheet("assets/DungeonStarter.png")
-        self.itemsheet = obj_Spritesheet("assets/pngguru.com.png")
-        self.mousesheet = obj_Spritesheet("assets/Mouse.png")
-
-        ## ANIMATIONS ##
-        self.A_PLAYER = self.charspritesheet.get_animation(
-            'o', 5, 16, 16, 2, (32, 32))
-        self.A_ENEMY1 = self.enemyspritesheet.get_animation(
-            'k', 1, 16, 16, 2, (32, 32))
-        self.A_ENEMY2 = self.enemyspritesheet.get_animation(
-            'a', 5, 16, 16, 2, (32, 32))
-        self.A_MOUSE = self.mousesheet.get_animation(
-            'aa', 0, 32, 32, 2, (32, 32))
-
-        ## SPRITES ##
-        self.S_WALL = pygame.image.load("assets/Wall2.jpg")
-        self.S_FLOOR = self.environmentsheet.get_image(
-            'a', 16, 16, 16, (32, 32))[0]
-        self.S_FLOOREXPLORED = self.environmentsheet.get_image(
-            'a', 1, 16, 16, (32, 32))[0]
-        self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
-        self.S_SKULL = [pygame.image.load("assets/Skull.png")]
-
-        ## ITEMS ##
-        self.S_SWORD = [pygame.transform.scale(
-            pygame.image.load("assets/Sword.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
-        self.S_SHIELD = [pygame.transform.scale(pygame.image.load(
-            "assets/Shield.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
-        self.S_SCROLL_01 = pygame.image.load("assets/Scroll.png")
-        self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
-        self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
-
-        ## SPECIAL ##
-        self.S_UPSTAIRS = [pygame.image.load("assets/Upstairs.png")]
-        self.S_DOWNSTAIRS = [pygame.image.load("assets/Downstairs.png")]
-        self.MAIN_MENU_BG = pygame.image.load("assets/Live Python.jpg")
-        # self.MAIN_MENU_BG = pygame.transform.scale(
-        # self.MAIN_MENU_BG, (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
-
-        self.animation_dict = {
-            ## ANIMATIONS ##
-            "A_PLAYER": self.A_PLAYER,
-            "A_ENEMY1": self.A_ENEMY1,
-            "A_ENEMY2": self.A_ENEMY2,
-            "A_MOUSE": self.A_MOUSE,
-
-            ## SPRITES ##
-            "S_SKULL": self.S_SKULL,
-
-            ## ITEMS ##
-            "S_SWORD": self.S_SWORD,
-            "S_SHIELD": self.S_SHIELD,
-            "S_SCROLL_01": [self.S_SCROLL_01],
-            "S_SCROLL_02": [self.S_SCROLL_02],
-            "S_SCROLL_03": [self.S_SCROLL_03],
-
-            ## SPECIAL ##
-            "S_STAIRS_UP": self.S_UPSTAIRS,
-            "S_STAIRS_DOWN": self.S_DOWNSTAIRS
-        }
-
-        ## AUDIO ##
-
-        self.snd_list = []
-
-        self.music_background = "audio/African Safari Loop.wav"
-        self.sound_hit_1 = self.add_sound("audio/Real_Punch.wav")
-        self.sound_hit_2 = self.add_sound("audio/Strong_Punch.wav")
-
-        self.snd_list_hit = [self.sound_hit_1, self.sound_hit_2]
-
-    def add_sound(self, file_address):
-
-        new_sound = pygame.mixer.Sound(file_address)
-
-        self.snd_list.append(new_sound)
-
-        return new_sound
+        self.vol_sound = 0.5
+        self.vol_music = 0.5
 
 
 ##############################################################################
@@ -434,6 +355,111 @@ class obj_Camera:
         map_y = self.y / constants.CELL_HEIGHT
 
         return (map_x, map_y)
+
+
+class obj_Assets:
+    def __init__(self):
+        self.load_assets()
+        self.sound_adjust()
+
+    def load_assets(self):
+        #######
+        # ART
+        #######
+
+        ## SPRITESHEETS ##
+        self.charspritesheet = obj_Spritesheet("assets/Reptiles.png")
+        self.enemyspritesheet = obj_Spritesheet("assets/Aquatic.png")
+        self.environmentsheet = obj_Spritesheet("assets/DungeonStarter.png")
+        self.itemsheet = obj_Spritesheet("assets/pngguru.com.png")
+        self.mousesheet = obj_Spritesheet("assets/Mouse.png")
+
+        ## ANIMATIONS ##
+        self.A_PLAYER = self.charspritesheet.get_animation(
+            'o', 5, 16, 16, 2, (32, 32))
+        self.A_ENEMY1 = self.enemyspritesheet.get_animation(
+            'k', 1, 16, 16, 2, (32, 32))
+        self.A_ENEMY2 = self.enemyspritesheet.get_animation(
+            'a', 5, 16, 16, 2, (32, 32))
+        self.A_MOUSE = self.mousesheet.get_animation(
+            'aa', 0, 32, 32, 2, (32, 32))
+
+        ## SPRITES ##
+        self.S_WALL = pygame.image.load("assets/Wall2.jpg")
+        self.S_FLOOR = self.environmentsheet.get_image(
+            'a', 16, 16, 16, (32, 32))[0]
+        self.S_FLOOREXPLORED = self.environmentsheet.get_image(
+            'a', 1, 16, 16, (32, 32))[0]
+        self.S_WALLEXPLORED = pygame.image.load("assets/WallUnseen.png")
+        self.S_SKULL = [pygame.image.load("assets/Skull.png")]
+
+        ## ITEMS ##
+        self.S_SWORD = [pygame.transform.scale(
+            pygame.image.load("assets/Sword.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
+        self.S_SHIELD = [pygame.transform.scale(pygame.image.load(
+            "assets/Shield.png"), (constants.CELL_WIDTH, constants.CELL_HEIGHT))]
+        self.S_SCROLL_01 = pygame.image.load("assets/Scroll.png")
+        self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
+        self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
+
+        ## SPECIAL ##
+        self.S_UPSTAIRS = [pygame.image.load("assets/Upstairs.png")]
+        self.S_DOWNSTAIRS = [pygame.image.load("assets/Downstairs.png")]
+        self.MAIN_MENU_BG = pygame.image.load("assets/Live Python.jpg")
+        # self.MAIN_MENU_BG = pygame.transform.scale(
+        # self.MAIN_MENU_BG, (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
+
+        self.animation_dict = {
+            ## ANIMATIONS ##
+            "A_PLAYER": self.A_PLAYER,
+            "A_ENEMY1": self.A_ENEMY1,
+            "A_ENEMY2": self.A_ENEMY2,
+            "A_MOUSE": self.A_MOUSE,
+
+            ## SPRITES ##
+            "S_SKULL": self.S_SKULL,
+
+            ## ITEMS ##
+            "S_SWORD": self.S_SWORD,
+            "S_SHIELD": self.S_SHIELD,
+            "S_SCROLL_01": [self.S_SCROLL_01],
+            "S_SCROLL_02": [self.S_SCROLL_02],
+            "S_SCROLL_03": [self.S_SCROLL_03],
+
+            ## SPECIAL ##
+            "S_STAIRS_UP": self.S_UPSTAIRS,
+            "S_STAIRS_DOWN": self.S_DOWNSTAIRS
+        }
+
+        #########
+        # AUDIO
+        #########
+
+        # Complete Sound List
+        self.snd_list = []
+
+        # Loaded Sound Assets
+        self.music_background = "audio/African Safari Loop.wav"
+        self.sound_hit_1 = self.sound_add("audio/Real_Punch.wav")
+        self.sound_hit_2 = self.sound_add("audio/Strong_Punch.wav")
+
+        # Sounds for Player strike
+        self.snd_list_hit = [self.sound_hit_1, self.sound_hit_2]
+
+    def sound_add(self, file_address):
+
+        new_sound = pygame.mixer.Sound(file_address)
+
+        self.snd_list.append(new_sound)
+
+        return new_sound
+
+    def sound_adjust(self):
+
+        for sound in self.snd_list:
+            sound.set_volume(PREFERENCES.vol_sound)
+
+        pygame.mixer.music.set_volume(PREFERENCES.vol_music)
 
 
 ##############################################################################
@@ -1404,8 +1430,14 @@ def menu_main_options():
 
     # Slider Vars
     slider_x = constants.CAMERA_WIDTH/2
-    sound_effect_slider_y = constants.CAMERA_HEIGHT/2
+    sound_effect_slider_y = constants.CAMERA_HEIGHT/2 - 60
     sound_effect_vol = 0.5  # Sound is on a scale of 0.0 -> 1.0 in pygame.mixer
+    music_effect_slider_y = constants.CAMERA_HEIGHT/2 - 10
+
+    # Text Vars
+    text_y_offset = 20
+    sound_text_y = sound_effect_slider_y - text_y_offset
+    music_text_y = music_effect_slider_y - text_y_offset
 
     window_center = (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2)
 
@@ -1419,6 +1451,9 @@ def menu_main_options():
 
     sound_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
         slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, 0.5)
+
+    music_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
+        slider_x, music_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, 0.5)
 
     while not menu_close:
 
@@ -1438,10 +1473,16 @@ def menu_main_options():
                     menu_close = True
 
         sound_effect_slider.update(game_input)
+        music_effect_slider.update(game_input)
 
         settings_menu_surface.fill(settings_menu_bgcolor)
         SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
+        draw_text(SURFACE_MAIN, "SOUND FX", constants.FONT_DEBUG_MESSAGE,
+                  (slider_x, sound_text_y), constants.COLOR_BLACK, center=True)
+        draw_text(SURFACE_MAIN, "MUSIC", constants.FONT_DEBUG_MESSAGE,
+                  (slider_x, music_text_y), constants.COLOR_BLACK, center=True)
         sound_effect_slider.draw()
+        music_effect_slider.draw()
 
         pygame.display.update()
 
@@ -1907,12 +1948,16 @@ def game_initialize():
 
     global SURFACE_MAIN, SURFACE_MAP
     global CLOCK, FOV_CALCULATE, ASSETS, CAMERA, RANDOM_ENGINE
+    global PREFERENCES
     # initialize pygame
     pygame.init()
 
     pygame.key.set_repeat(200, 70)  # first delay, 200ms, then 70ms after
 
     pygame.font.init()
+
+    # Initialize Preferences
+    PREFERENCES = struc_Preferences()
 
     SURFACE_MAIN = pygame.display.set_mode(
         (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
@@ -1922,7 +1967,7 @@ def game_initialize():
 
     CAMERA = obj_Camera()
 
-    ASSETS = struc_Assets()
+    ASSETS = obj_Assets()
 
     CLOCK = pygame.time.Clock()
 

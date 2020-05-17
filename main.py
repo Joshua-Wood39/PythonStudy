@@ -360,7 +360,7 @@ class obj_Camera:
 class obj_Assets:
     def __init__(self):
         self.load_assets()
-        self.sound_adjust()
+        self.volume_adjust()
 
     def load_assets(self):
         #######
@@ -454,7 +454,7 @@ class obj_Assets:
 
         return new_sound
 
-    def sound_adjust(self):
+    def volume_adjust(self):
 
         for sound in self.snd_list:
             sound.set_volume(PREFERENCES.vol_sound)
@@ -1450,10 +1450,10 @@ def menu_main_options():
     menu_close = False
 
     sound_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
-        slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, 0.5)
+        slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, PREFERENCES.vol_sound)
 
     music_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
-        slider_x, music_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, 0.5)
+        slider_x, music_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, PREFERENCES.vol_music)
 
     while not menu_close:
 
@@ -1472,8 +1472,19 @@ def menu_main_options():
                 if event.key == pygame.K_ESCAPE:
                     menu_close = True
 
+        current_sound_vol = PREFERENCES.vol_sound
+        current_music_vol = PREFERENCES.vol_music
+
         sound_effect_slider.update(game_input)
         music_effect_slider.update(game_input)
+
+        if current_sound_vol is not sound_effect_slider.current_val:
+            PREFERENCES.vol_sound = sound_effect_slider.current_val
+            ASSETS.volume_adjust()
+
+        if current_music_vol is not music_effect_slider.current_val:
+            PREFERENCES.vol_music = music_effect_slider.current_val
+            ASSETS.volume_adjust()
 
         settings_menu_surface.fill(settings_menu_bgcolor)
         SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)

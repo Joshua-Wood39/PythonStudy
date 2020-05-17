@@ -1270,6 +1270,10 @@ class ui_Slider:
             (0, 0), (self.bg_rect.width * self.current_val, self.bg_rect.height))
         self.fg_rect.topleft = self.bg_rect.topleft
 
+        self.grip_tab = pygame.Rect((0, 0), (20, self.bg_rect.height + 4))
+        self.grip_tab.center = (
+            self.fg_rect.right, self.bg_rect.centery)
+
     def update(self, player_input):
 
         # Will be '1' if the left mouse button is held down
@@ -1288,12 +1292,17 @@ class ui_Slider:
 
             self.fg_rect.width = self.bg_rect.width * self.current_val
 
+            self.grip_tab.center = (self.fg_rect.right, self.bg_rect.centery)
+
     def draw(self):
         # Draw bg rect ~ RED
         pygame.draw.rect(self.surface, self.bg_color, self.bg_rect)
 
         # Draw fg rect ~ GREEN
         pygame.draw.rect(self.surface, self.fg_color, self.fg_rect)
+
+        # Draw the grip tab ~ BLACK
+        pygame.draw.rect(self.surface, constants.COLOR_BLACK, self.grip_tab)
 
 
 ##############################################################################
@@ -1408,10 +1417,6 @@ def menu_main_options():
 
     menu_close = False
 
-    settings_menu_surface.fill(settings_menu_bgcolor)
-
-    SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
-
     sound_effect_slider = ui_Slider(SURFACE_MAIN, (125, 15), (
         slider_x, sound_effect_slider_y), constants.COLOR_RED, constants.COLOR_GREEN, 0.5)
 
@@ -1433,6 +1438,9 @@ def menu_main_options():
                     menu_close = True
 
         sound_effect_slider.update(game_input)
+
+        settings_menu_surface.fill(settings_menu_bgcolor)
+        SURFACE_MAIN.blit(settings_menu_surface, settings_menu_rect.topleft)
         sound_effect_slider.draw()
 
         pygame.display.update()

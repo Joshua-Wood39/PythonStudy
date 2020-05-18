@@ -6,6 +6,7 @@ import pickle
 import gzip
 import random
 import sys
+import datetime
 
 ##############################################################################
 # STRUCTURES
@@ -766,6 +767,15 @@ def death_player(player):
               screen_center, constants.COLOR_WHITE, center=True)
 
     pygame.display.update()
+
+    filename = ("savedata/legacy_" + PLAYER.creature.name_instance + "." +
+                datetime.date.today().strftime("%Y%B%d") + ".txt")
+
+    # 'a+' will append an existing file, or create one if it doesn't exist
+    legacy_file = open(filename, 'a+')
+
+    for message, color in GAME.message_history:
+        legacy_file.write(message + "\n")
 
     pygame.time.wait(4000)
 

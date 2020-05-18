@@ -39,11 +39,14 @@ class obj_Actor:
                  container=None,
                  item=None,
                  equipment=None,
-                 stairs=None):
+                 stairs=None,
+                 state=None):
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
         self.animation_key = animation_key
+        self.state = state
+
         # list of images
         self.animation = ASSETS.animation_dict[self.animation_key]
         self.animation_speed = animation_speed / 1.0  # in seconds
@@ -725,6 +728,11 @@ class ai_Flee:
             self.owner.move_away(PLAYER)
 
 
+##############################################################################
+# DEATH
+##############################################################################
+
+
 def death_monster(monster):
     '''On death, most monsters stop moving'''
 
@@ -745,6 +753,21 @@ def death_mouse(mouse):
     mouse.animation_key = "S_SKULL"
     mouse.creature = None
     mouse.ai = None
+
+
+def death_player(player):
+    player.state = "STATUS_DEAD"
+
+    SURFACE_MAIN.fill(constants.COLOR_BLACK)
+
+    screen_center = (constants.CAMERA_WIDTH/2, constants.CAMERA_HEIGHT/2)
+
+    draw_text(SURFACE_MAIN, "YOU DIED!", constants.FONT_TITLE_SCREEN,
+              screen_center, constants.COLOR_WHITE, center=True)
+
+    pygame.display.update()
+
+    pygame.time.wait(4000)
 
 
 ##############################################################################
@@ -1352,11 +1375,6 @@ def menu_main():
     options_button_y = new_button_y + 40
     quit_button_y = options_button_y + 40
 
-    SURFACE_MAIN.blit(ASSETS.MAIN_MENU_BG, (0, 0))
-
-    draw_text(SURFACE_MAIN, title_text, constants.FONT_TITLE_SCREEN,
-              (title_x, title_y), constants.COLOR_RED, back_color=constants.COLOR_BLACK, center=True)
-
     continue_game_button = ui_Button(SURFACE_MAIN, "Continue", (150, 35),
                                      (title_x, continue_button_y))
 
@@ -1403,13 +1421,15 @@ def menu_main():
 
         if options_button.update(game_input):
             menu_main_options()
-            SURFACE_MAIN.blit(ASSETS.MAIN_MENU_BG, (0, 0))
-            draw_text(SURFACE_MAIN, title_text, constants.FONT_TITLE_SCREEN,
-                      (title_x, title_y), constants.COLOR_RED, back_color=constants.COLOR_BLACK, center=True)
 
         if quit_button.update(game_input):
             pygame.quit()
             sys.exit()
+
+        SURFACE_MAIN.blit(ASSETS.MAIN_MENU_BG, (0, 0))
+
+        draw_text(SURFACE_MAIN, title_text, constants.FONT_TITLE_SCREEN,
+                  (title_x, title_y), constants.COLOR_RED, back_color=constants.COLOR_BLACK, center=True)
 
         # Draw menu
         continue_game_button.draw()
@@ -1746,7 +1766,8 @@ def gen_player(coords):
     global PLAYER
     x, y = coords
     container_com = com_Container()
-    creature_com = com_Creature("Snicky", base_atk=4)
+    creature_com = com_Creature(
+        "Snicky", base_atk=4, death_function=death_player)
     PLAYER = obj_Actor(x, y, "Python", "A_PLAYER",
                        animation_speed=1, creature=creature_com, container=container_com)
     GAME.current_objects.append(PLAYER)
@@ -1959,6 +1980,9 @@ def game_main_loop():
                 if obj.ai:
                     obj.ai.take_turn()
 
+        if PLAYER.state is "STATUS_DEAD":
+            game_quit = True
+
         # draw the game
         draw_game()
 
@@ -1967,9 +1991,6 @@ def game_main_loop():
 
         # tick the CLOCK
         CLOCK.tick(constants.GAME_FPS)
-
-    pygame.quit()
-    exit()
 
 
 def game_initialize():

@@ -41,7 +41,8 @@ class obj_Actor:
                  item=None,
                  equipment=None,
                  stairs=None,
-                 state=None):
+                 state=None,
+                 exitportal=None):
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
@@ -83,6 +84,10 @@ class obj_Actor:
         self.stairs = stairs
         if self.stairs:
             self.stairs.owner = self
+
+        self.exitportal = exitportal
+        if self.exitportal:
+            self.exitportal.owner = self
 
     @property  # Can call the method as a property
     def display_name(self):
@@ -405,11 +410,14 @@ class obj_Assets:
         self.S_SCROLL_01 = pygame.image.load("assets/Scroll.png")
         self.S_SCROLL_02 = pygame.image.load("assets/Scroll.png")
         self.S_SCROLL_03 = pygame.image.load("assets/Scroll.png")
+        self.S_LAMP = pygame.image.load("assets/Lamp.png")
 
         ## SPECIAL ##
         self.S_UPSTAIRS = [pygame.image.load("assets/Upstairs.png")]
         self.S_DOWNSTAIRS = [pygame.image.load("assets/Downstairs.png")]
         self.MAIN_MENU_BG = pygame.image.load("assets/Live Python.jpg")
+        self.S_DOOR_OPEN = pygame.image.load("assets/DoorOpen.png")
+        self.S_DOOR_CLOSE = pygame.image.load("assets/DoorClose.png")
         # self.MAIN_MENU_BG = pygame.transform.scale(
         # self.MAIN_MENU_BG, (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
 
@@ -429,10 +437,14 @@ class obj_Assets:
             "S_SCROLL_01": [self.S_SCROLL_01],
             "S_SCROLL_02": [self.S_SCROLL_02],
             "S_SCROLL_03": [self.S_SCROLL_03],
+            "S_LAMP": [self.S_LAMP],
 
             ## SPECIAL ##
             "S_STAIRS_UP": self.S_UPSTAIRS,
-            "S_STAIRS_DOWN": self.S_DOWNSTAIRS
+            "S_STAIRS_DOWN": self.S_DOWNSTAIRS,
+            "S_DOOR_OPEN": self.S_DOOR_OPEN,
+            "S_DOOR_CLOSE": self.S_DOOR_CLOSE
+
         }
 
         #########
@@ -673,6 +685,28 @@ class com_Stairs:
             GAME.transition_next()
         else:
             GAME.transition_previous()
+
+
+class com_ExitPortal:
+    def __init__(self):
+        self.OPEN = "S_DOOR_OPEN"
+        self.CLOSE = "S_DOOR_CLOSE"
+
+    def update(self):
+
+        found_lamp = False
+        for obj in PLAYER.container.inventory:
+            if obj.name_object is "THE LAMP":
+                found_lamp = True
+                if not self.owner.state != "OPEN":
+                    self.owner.state = "OPEN"
+                    self.owner.animation_key = self.OPEN
+                    self.owner.animation_init()
+
+        if not found_lamp and self.owner.state == "OPEN":
+            self.owner.state = "CLOSED"
+            self.owner.animation_key = self.CLOSE
+            self.owner.animation_init()
 
 
 ##############################################################################

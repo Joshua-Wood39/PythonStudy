@@ -416,8 +416,8 @@ class obj_Assets:
         self.S_UPSTAIRS = [pygame.image.load("assets/Upstairs.png")]
         self.S_DOWNSTAIRS = [pygame.image.load("assets/Downstairs.png")]
         self.MAIN_MENU_BG = pygame.image.load("assets/Live Python.jpg")
-        self.S_DOOR_OPEN = pygame.image.load("assets/DoorOpen.png")
-        self.S_DOOR_CLOSE = pygame.image.load("assets/DoorClose.png")
+        self.S_DOOR_OPEN = [pygame.image.load("assets/DoorOpen.png")]
+        self.S_DOOR_CLOSE = [pygame.image.load("assets/DoorClose.png")]
         # self.MAIN_MENU_BG = pygame.transform.scale(
         # self.MAIN_MENU_BG, (constants.CAMERA_WIDTH, constants.CAMERA_HEIGHT))
 
@@ -565,9 +565,13 @@ class com_Creature:
 
 
 class com_Container:
-    def __init__(self, volume=10.0, inventory=[]):
+    def __init__(self, volume=10.0, inventory=None):
         self.inventory = inventory
         self.max_volume = volume
+        if inventory:
+            self.inventory = inventory
+        else:
+            self.inventory = []
 
     # TODO Get names of everything in inventory
 
@@ -616,7 +620,7 @@ class com_Item:
 
         self.owner.animation_init()
 
-        self.container.inventory.remove(self.owner)
+        self.current_container.inventory.remove(self.owner)
         self.owner.x = new_x
         self.owner.y = new_y
         game_message("Item dropped", constants.COLOR_GREY)
@@ -693,19 +697,24 @@ class com_ExitPortal:
         self.CLOSE = "S_DOOR_CLOSE"
 
     def update(self):
-
+        # Flag initialization
         found_lamp = False
+
+        # Check condition
+        portal_open = self.owner.state == "OPEN"
+
         for obj in PLAYER.container.inventory:
             if obj.name_object is "THE LAMP":
                 found_lamp = True
-                if not self.owner.state != "OPEN":
-                    self.owner.state = "OPEN"
-                    self.owner.animation_key = self.OPEN
-                    self.owner.animation_init()
 
-        if not found_lamp and self.owner.state == "OPEN":
+        if found_lamp and not portal_open:
+            self.owner.state = "OPEN"
+            self.owner.animation_key = "S_DOOR_OPEN"
+            self.owner.animation_init()
+
+        if not found_lamp and portal_open:
             self.owner.state = "CLOSED"
-            self.owner.animation_key = self.CLOSE
+            self.owner.animation_key = "S_DOOR_CLOSE"
             self.owner.animation_init()
 
 
@@ -867,7 +876,11 @@ def map_create():
 
 def map_place_objects(room_list):
 
-    top_level = (len(GAME.maps_previous) == 0)
+    current_level = len(GAME.maps_previous) + 1
+
+    top_level = (current_level == 1)
+
+    final_level = (current_level == constants.MAP_NUM_LEVELS)
 
     for room in room_list:
 
@@ -877,11 +890,17 @@ def map_place_objects(room_list):
         if first_room:
             PLAYER.x, PLAYER.y = room.center
 
+        if first_room and top_level:
+            gen_portal(room.center)
+
         if first_room and not top_level:
             gen_stairs((PLAYER.x, PLAYER.y), downwards=False)
 
         if last_room:
-            gen_stairs(room.center)
+            if final_level:
+                gen_LAMP(room.center)
+            else:
+                gen_stairs(room.center)
 
         x = libtcodpy.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcodpy.random_get_int(0, room.y1 + 1, room.y2 - 1)
@@ -1457,11 +1476,13 @@ def menu_main():
                 game_new()
 
             game_main_loop()
+            game_initialize()
 
         if new_game_button.update(game_input):
             pygame.mixer.music.stop()
             game_new()
             game_main_loop()
+            game_initialize()
 
         if options_button.update(game_input):
             menu_main_options()
@@ -1811,7 +1832,7 @@ def gen_player(coords):
     x, y = coords
     container_com = com_Container()
     creature_com = com_Creature(
-        "Snicky", base_atk=4, death_function=death_player)
+        "Snicky", base_atk=4, hp=25, death_function=death_player)
     PLAYER = obj_Actor(x, y, "Python", "A_PLAYER",
                        animation_speed=1, creature=creature_com, container=container_com)
     GAME.current_objects.append(PLAYER)
@@ -1834,7 +1855,31 @@ def gen_stairs(coords, downwards=True):
     GAME.current_objects.append(stairs)
 
 
+def gen_portal(coords):
+
+    x, y = coords
+
+    port_com = com_ExitPortal()
+    portal = obj_Actor(x, y, "exit portal",
+                       animation_key="S_DOOR_CLOSE", exitportal=port_com)
+
+    GAME.current_objects.append(portal)
+
+
+def gen_LAMP(coords):
+    x, y = coords
+
+    item_com = com_Item()
+
+    return_object = obj_Actor(
+        x, y, "THE LAMP", animation_key="S_LAMP", item=item_com)
+
+    GAME.current_objects.append(return_object)
+
+
 # ITEMS
+
+
 def gen_item(coords):
 
     random_num = libtcodpy.random_get_int(0, 1, 5)
@@ -2019,10 +2064,12 @@ def game_main_loop():
         if player_action == "QUIT":
             game_exit()
 
-        elif player_action != "no-action":
-            for obj in GAME.current_objects:
-                if obj.ai:
+        for obj in GAME.current_objects:
+            if obj.ai:
+                if player_action != "no-action":
                     obj.ai.take_turn()
+            if obj.exitportal:
+                obj.exitportal.update()
 
         if PLAYER.state is "STATUS_DEAD":
             game_quit = True

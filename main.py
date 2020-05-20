@@ -7,6 +7,7 @@ import gzip
 import random
 import sys
 import datetime
+import os
 
 ##############################################################################
 # STRUCTURES
@@ -717,6 +718,41 @@ class com_ExitPortal:
             self.owner.animation_key = "S_DOOR_CLOSE"
             self.owner.animation_init()
 
+    def use(self):
+
+        if self.owner.state == "OPEN":
+
+            PLAYER.state = "STATUS_WIN"
+
+            SURFACE_MAIN.fill(constants.COLOR_WHITE)
+
+            screen_center = (constants.CAMERA_WIDTH/2,
+                             constants.CAMERA_HEIGHT/2)
+
+            draw_text(SURFACE_MAIN, "YOU WON!", constants.FONT_TITLE_SCREEN,
+                      screen_center, constants.COLOR_BLACK, center=True)
+
+            pygame.display.update()
+
+            filename = ("savedata/win_" + PLAYER.creature.name_instance + "." +
+                        datetime.date.today().strftime("%Y%B%d") + ".txt")
+
+            file_exists = os.path.isfile(filename)
+            save_exists = os.path.isfile("assets/savegame")
+
+            if file_exists:
+                os.remove(filename)
+            if save_exists:
+                os.remove("assets/savegame")
+
+            # 'a+' will append an existing file, or create one if it doesn't exist
+            legacy_file = open(filename, 'a+')
+
+            for message, color in GAME.message_history:
+                legacy_file.write(message + "\n")
+
+            pygame.time.wait(4000)
+
 
 ##############################################################################
 # AI
@@ -813,6 +849,14 @@ def death_player(player):
 
     filename = ("savedata/legacy_" + PLAYER.creature.name_instance + "." +
                 datetime.date.today().strftime("%Y%B%d") + ".txt")
+
+    file_exists = os.path.isfile(filename)
+    save_exists = os.path.isfile("assets/savegame")
+
+    if file_exists:
+        os.remove(filename)
+    if save_exists:
+        os.remove("assets/savegame")
 
     # 'a+' will append an existing file, or create one if it doesn't exist
     legacy_file = open(filename, 'a+')
@@ -1721,7 +1765,7 @@ def menu_inventory():
 
 
 def menu_tile_select(coords_origin=None, max_range=None, penetrate_walls=True, pierce_creature=True, radius=None):
-    ''' This menu lets the player select a tile. 
+    ''' This menu lets the player select a tile.
     This function pauses the game, produces an on-screen rectangle
     and when the player presses the left mouse-button, will return
     (message for now) the map address
@@ -2071,7 +2115,7 @@ def game_main_loop():
             if obj.exitportal:
                 obj.exitportal.update()
 
-        if PLAYER.state is "STATUS_DEAD":
+        if (PLAYER.state == "STATUS_DEAD" or PLAYER.state == "STATUS_WIN"):
             game_quit = True
 
         # draw the game
@@ -2186,6 +2230,8 @@ def game_handle_keys():
                 for obj in list_of_objects:
                     if obj.stairs:
                         obj.stairs.use()
+                    if obj.exitportal:
+                        obj.exitportal.use()
 
     return "no-action"
 

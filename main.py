@@ -43,12 +43,14 @@ class obj_Actor:
                  equipment=None,
                  stairs=None,
                  state=None,
-                 exitportal=None):
+                 exitportal=None,
+                 depth=0):
         self.x = x  # map addresses
         self.y = y
         self.name_object = name_object
         self.animation_key = animation_key
         self.state = state
+        self.depth = depth
 
         # list of images
         self.animation = ASSETS.animation_dict[self.animation_key]
@@ -821,6 +823,7 @@ def death_monster(monster):
 
     monster.animation = ASSETS.S_SKULL
     monster.animation_key = "S_SKULL"
+    monster.depth = constants.DEPTH_CORPSE
     monster.creature = None
     monster.ai = None
 
@@ -1094,7 +1097,7 @@ def draw_game():
     draw_map(GAME.current_map)
 
     # draw all objects ---removed key=lambda obj: obj.depth
-    for obj in GAME.current_objects:
+    for obj in sorted(GAME.current_objects, key=lambda obj: obj.depth, reverse=True):
         obj.draw()
 
     SURFACE_MAIN.blit(SURFACE_MAP, (0, 0), CAMERA.rectangle)
@@ -1878,7 +1881,7 @@ def gen_player(coords):
     creature_com = com_Creature(
         "Snicky", base_atk=4, hp=25, death_function=death_player)
     PLAYER = obj_Actor(x, y, "Python", "A_PLAYER",
-                       animation_speed=1, creature=creature_com, container=container_com)
+                       animation_speed=1, creature=creature_com, container=container_com, depth=constants.DEPTH_PLAYER)
     GAME.current_objects.append(PLAYER)
 
 
@@ -1916,7 +1919,7 @@ def gen_LAMP(coords):
     item_com = com_Item()
 
     return_object = obj_Actor(
-        x, y, "THE LAMP", animation_key="S_LAMP", item=item_com)
+        x, y, "THE LAMP", animation_key="S_LAMP", item=item_com, depth=constants.DEPTH_ITEM)
 
     GAME.current_objects.append(return_object)
 
@@ -1952,7 +1955,7 @@ def gen_scroll_lightning(coords):
     item_com = com_Item(use_function=cast_lightning, value=(damage, m_range))
 
     return_object = obj_Actor(x, y, "lightning scroll",
-                              animation_key="S_SCROLL_01", item=item_com)
+                              animation_key="S_SCROLL_01", item=item_com, depth=constants.DEPTH_ITEM)
 
     return return_object
 
@@ -1969,7 +1972,7 @@ def gen_scroll_fireball(coords):
                         value=(damage, radius, m_range))
 
     return_object = obj_Actor(x, y, "fireball scroll",
-                              animation_key="S_SCROLL_02", item=item_com)
+                              animation_key="S_SCROLL_02", item=item_com, depth=constants.DEPTH_ITEM)
 
     return return_object
 
@@ -1984,7 +1987,7 @@ def gen_scroll_confusion(coords):
                         value=effect_length)
 
     return_object = obj_Actor(x, y, "confusion scroll",
-                              animation_key="S_SCROLL_03", item=item_com)
+                              animation_key="S_SCROLL_03", item=item_com, depth=constants.DEPTH_ITEM)
 
     return return_object
 
@@ -1998,7 +2001,7 @@ def gen_weapon_sword(coords):
     equipment_com = com_Equipment(attack_bonus=bonus)
 
     return_object = obj_Actor(
-        x, y, "Short Sword", animation_key="S_SWORD", equipment=equipment_com)
+        x, y, "Short Sword", animation_key="S_SWORD", equipment=equipment_com, depth=constants.DEPTH_ITEM)
 
     return return_object
 
@@ -2012,7 +2015,7 @@ def gen_armor_shield(coords):
     equipment_com = com_Equipment(defense_bonus=bonus)
 
     return_object = obj_Actor(
-        x, y, "Small Shield", animation_key="S_SHIELD", equipment=equipment_com)
+        x, y, "Small Shield", animation_key="S_SHIELD", equipment=equipment_com, depth=constants.DEPTH_ITEM)
 
     return return_object
 
@@ -2043,7 +2046,7 @@ def gen_aquatic_lobster(coords):
         "Flippy", base_atk=base_attack, hp=max_health, death_function=death_monster)
     ai_com = ai_Chase()
     enemy = obj_Actor(x, y, "Rock Lobster", animation_key="A_ENEMY1",
-                      animation_speed=1, creature=creature_com, ai=ai_com, item=item_com)
+                      animation_speed=1, creature=creature_com, ai=ai_com, item=item_com, depth=constants.DEPTH_ENEMY)
     return enemy
 
 
@@ -2059,7 +2062,7 @@ def gen_aquatic_squid(coords):
         "Poots", base_atk=base_attack, hp=max_health, death_function=death_monster)
     ai_com = ai_Chase()
     enemy = obj_Actor(x, y, "Fugly Squid", animation_key="A_ENEMY2", animation_speed=1,
-                      creature=creature_com, ai=ai_com, item=item_com)
+                      creature=creature_com, ai=ai_com, item=item_com, depth=constants.DEPTH_ENEMY)
     return enemy
 
 
@@ -2081,7 +2084,7 @@ def gen_mouse(coords):
     item_com = com_Item(use_function=cast_heal, value=5)
 
     mouse = obj_Actor(x, y, "Mouse", animation_key="A_MOUSE",
-                      animation_speed=1, creature=creature_com, item=item_com, ai=ai_com)
+                      animation_speed=1, creature=creature_com, item=item_com, ai=ai_com, depth=constants.DEPTH_ENEMY)
 
     return mouse
 

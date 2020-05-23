@@ -1,0 +1,92 @@
+Poots attacks Snicky for 3 damage!
+Snicky's health is 22/25
+Snicky attacks Poots for 4 damage!
+Poots's health is 8/12
+Poots attacks Snicky for 3 damage!
+Snicky's health is 19/25
+Snicky attacks Poots for 4 damage!
+Poots's health is 4/12
+Poots attacks Snicky for 3 damage!
+Snicky's health is 16/25
+Snicky attacks Poots for 4 damage!
+Poots's health is 0/12
+Poots is dead!
+Picking up
+Picking up
+Snicky attacks Flippy for 4 damage!
+Flippy's health is 6/10
+Flippy attacks Snicky for 1 damage!
+Snicky's health is 15/25
+Snicky attacks Flippy for 4 damage!
+Flippy's health is 2/10
+Flippy attacks Snicky for 1 damage!
+Snicky's health is 14/25
+Snicky attacks Flippy for 4 damage!
+Flippy's health is -2/10
+Flippy is dead!
+Picking up
+Snicky the Python healed for 4 health!
+Snicky the Python healed for 5 health!
+Picking up
+Picking up
+Item equipped
+Snicky attacks Mousy for 6 damage!
+Mousy's health is -5/1
+Mousy is dead! Eat him!
+Picking up
+Snicky attacks Mousy for 6 damage!
+Mousy's health is -5/1
+Mousy is dead! Eat him!
+Picking up
+Picking up
+Item equipped
+Snicky attacks Flippy for 6 damage!
+Flippy's health is -1/5
+Flippy is dead!
+Picking up
+Picking up
+Flippy attacks Snicky for -1 damage!
+Snicky's health is 24/25
+Poots attacks Snicky for 2 damage!
+Snicky's health is 22/25
+Snicky attacks Flippy for 6 damage!
+Flippy's health is -1/5
+Flippy is dead!
+Poots attacks Snicky for 2 damage!
+Snicky's health is 20/25
+Snicky attacks Poots for 6 damage!
+Poots's health is 6/12
+Poots attacks Snicky for 2 damage!
+Snicky's health is 18/25
+Snicky attacks Poots for 6 damage!
+Poots's health is 0/12
+Poots is dead!
+Snicky the Python healed for 4 health!
+Snicky the Python healed for 5 health!
+Picking up
+Picking up
+Picking up
+Flippy's health is 6/10
+The monster howls out in pain.
+The creature's eyes glaze over
+Snicky attacks Flippy for 6 damage!
+Flippy's health is 0/10
+Flippy is dead!
+Picking up
+Picking up
+Picking up
+The creature's eyes glaze over
+Poots's health is 10/15
+Snicky attacks Poots for 6 damage!
+Poots's health is 4/15
+Poots attacks Snicky for 4 damage!
+Snicky's health is 21/25
+Poots the Fugly Squid has broken free!
+Poots attacks Snicky for 4 damage!
+Snicky's health is 17/25
+Snicky attacks Poots for 6 damage!
+Poots's health is -2/15
+Poots is dead!
+Picking up
+Snicky the Python healed for 5 health!
+Snicky the Python healed for 4 health!

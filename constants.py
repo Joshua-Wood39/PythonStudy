@@ -52,3 +52,9 @@ FONT_TITLE_SCREEN = pygame.font.SysFont("comicsans", 50)
 FONT_DEBUG_MESSAGE = pygame.font.SysFont("comicsans", 36)
 FONT_MESSAGE_TEXT = pygame.font.SysFont("comicsans", 30)
 FONT_CURSOR_TEXT = pygame.font.SysFont("comicsans", CELL_HEIGHT)
+
+# Depth
+DEPTH_PLAYER = -100
+DEPTH_ENEMY = 1
+DEPTH_ITEM = 2
+DEPTH_CORPSE = 3
